@@ -224,6 +224,22 @@ _lcd_wake::
 	ei
 	ret
 
+; unsigned char read_port(unsigned char port)
+_read_port::
+	push	ix
+	ld	ix, #0
+	add	ix, sp
+	push	af
+	push	bc
+	ld	b, #0
+	ld	c, 4(ix)
+	in	l, (C)
+	ld	h, #0
+	pop	bc
+	pop	af
+	pop	ix
+	ret
+
 
 ; 8-bit multiplication
 ; de * a = hl

@@ -30,6 +30,19 @@ __sfr __at(0x07) slot8000page;
 __sfr __at(0x08) slot8000device;
 __sfr __at(0x09) portpowerstatus;
 __sfr __at(0x0d) portcpuclockrate;
+__sfr __at(0x10) rtcseconds;
+__sfr __at(0x11) rtc10seconds;
+__sfr __at(0x12) rtcminutes;
+__sfr __at(0x13) rtc10minutes;
+__sfr __at(0x14) rtchours;
+__sfr __at(0x15) rtc10hours;
+__sfr __at(0x16) rtcdayofweek;
+__sfr __at(0x17) rtcdays;
+__sfr __at(0x18) rtc10days;
+__sfr __at(0x19) rtcmonths;
+__sfr __at(0x1a) rtc10months;
+__sfr __at(0x1b) rtcyears;
+__sfr __at(0x1c) rtc10years;
 __sfr __at(0x28) port28;
 
 /* v2.54 firmware */
@@ -99,6 +112,7 @@ extern void new_mail(unsigned char on);
 extern void reboot(void);
 extern void delay(unsigned int millis);
 extern void lcd_paint(void);
+extern unsigned char read_port(unsigned char port);
 
 
 /* mslib.c */

@@ -67,9 +67,10 @@ patch_isr::
 
 	xor	a			; clear interrupt mask
 	set	7, a			; allow interrupt 7 for power button
-	set	6, a			; and 6 for modem
-	set	2, a			; and 2 for keyboard
-	set	1, a			; and 1 for keyboard
+	set	6, a			; 6 for modem
+	;set	5, a			; 5 for RTC
+	set	2, a			; 2 for keyboard
+	set	1, a			; 1 for keyboard
 	ld	(p3shadow), a		; store this mask in p3shadow
 	out	(0x3), a
 	ei				; here we go!

@@ -31,6 +31,7 @@ extern volatile unsigned char mem0;
 unsigned char lastkey;
 unsigned char esc;
 unsigned char old_modem_msr;
+unsigned char old_minutes;
 
 #define MODEM_BUF	0xf600
 #define MODEM_BUF_POS	0xf700
@@ -54,8 +55,9 @@ unsigned char source;
 #define STATUSBAR_CALL		"     Call    "
 #define STATUSBAR_HANGUP	"    Hangup   "
 #define STATUSBAR_BLANK		"             "
-#define STATUSBAR_SETTINGS	"  Settings  "
+#define STATUSBAR_SETTINGS	"  Settings   "
 unsigned char statusbar_state;
+unsigned char statusbar_time[15];
 
 int main(void)
 {
@@ -76,6 +78,7 @@ restart:
 	obuf_pos = 0;
 	old_obuf_pos = 0;
 	old_modem_msr = 0;
+	old_minutes = 0;
 	debug0 = 0;
 
 	clear_screen();
@@ -143,23 +146,33 @@ void
 maybe_update_statusbar(unsigned char force)
 {
 	unsigned char s;
-	unsigned char old_state = statusbar_state;
+	unsigned char update = 0;
 
 	if (modem_curmsr & MODEM_MSR_DCD)
 		s = 1; /* DCD, change to 'hangup' */
 	else
 		s = 0;
 
-	if (s != (statusbar_state & (1 << 0)))
+	if (s != (statusbar_state & (1 << 0))) {
 		statusbar_state ^= (1 << 0);
+		update = 1;
+	}
 
-	if ((statusbar_state != old_state) || force) {
+	if ((rtcminutes != old_minutes) || force) {
+		old_minutes = rtcminutes;
+		sprintf(statusbar_time, "   %02d:%02d   ",
+		    (rtc10hours * 10) + rtchours,
+		    (rtc10minutes * 10) + rtcminutes);
+		update = 1;
+	}
+
+	if (update || force) {
 		update_statusbar("%s%s%s%s%s",
 		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP : STATUSBAR_CALL,
+		    STATUSBAR_SETTINGS,
 		    STATUSBAR_BLANK,
 		    STATUSBAR_BLANK,
-		    STATUSBAR_BLANK,
-		    STATUSBAR_SETTINGS);
+		    statusbar_time);
 	}
 }
 
