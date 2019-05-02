@@ -22,6 +22,7 @@
 	.module modem
 
 	.include "mailstation.inc"
+	.globl	_new_mail
 
 	.area	_DATA
 
@@ -33,6 +34,10 @@ _modem_curmsr::
 
 _modem_isr::
 	push	hl
+	ld	l, #1
+	push	hl
+	call	_new_mail
+	pop	hl
 	call	_modem_iir		; read IIR to identify interrupt
 	bit	#0, l
 	jr	nz, modem_isr_out	; no interrupt, how did we get here?
@@ -43,13 +48,14 @@ has_irq:
 	and	#0b00000110		; receiver line status, some error
 	jr	nz, no_rls
 	push	hl
-	call	_modem_lsr		; what are we supposed to do with it?
+	call	_modem_lsr		; what are we supposed to do with it?  (FCR bit 1?)
 	pop	hl
 	jr	modem_isr_out
 no_rls:
 	ld	a, l
 	and	#0b00000100		; received data available or timeout
 	jr	z, no_rda
+modem_read_loop:
 	push	hl
 	call	_modem_read
 	ld	b, l
@@ -60,11 +66,11 @@ no_rls:
 	ld	(hl), b
 	inc	a
 	ld	(modem_buf_pos), a
-	jr	modem_isr_out
+	call	_modem_lsr
+	bit	0, l
+	jr	nz, modem_read_loop
 no_rda:
 modem_isr_out:
-	; XXX: why do we have to force this? the interrupt should trigger it
-	; in the no_rda jump
 	call	_modem_msr		; modem status update
 	ld	a, l
 	ld	(_modem_curmsr), a
@@ -127,30 +133,31 @@ _modem_init::
 	ld	a, #0b11000111		; 14 byte trigger
 	;ld	a, #0b00000111		; XXX: try 1-byte trigger instead
 	ld	(#0x4002), a		; FCR = enable FIFO
-	ld	a, (#0xe62c)		; what variable is at 0xe62c?
-	or	a
-	jr	z, skip_dlab
-	ld	a, #0b10000011
-	ld	(#0x4003), a		; LCR = DLAB=1, 8n1
-	ld	a, #0x06
-	ld	(#0x4000), a		; DLL = 6
-	ld	a, #0
-	ld	(#0x4001), a		; DLM = 0 = divisor 6 = baud rate 19200
-skip_dlab:
+;	ld	a, (#0xe62c)		; what variable is at 0xe62c?
+;	or	a
+;	jr	z, skip_dlab
+;	ld	a, #0b10000011
+;	ld	(#0x4003), a		; LCR = DLAB=1, 8n1
+;	ld	a, #0x6
+;	ld	(#0x4000), a		; DLL = 6
+;	ld	a, #0
+;	ld	(#0x4001), a		; DLM = 0 = divisor 6 = baud rate 19200
+;skip_dlab:
 	ld	a, #0b00000011
 	ld	(#0x4003), a		; LCR = DLAB=0, 8n1
 	ld	a, (#0x4004)		; read MCR
-	or	#0b00001111
-	ld	(#0x4004), a		; MCR = enable HINT
-	ld	(_modem_curmsr), a
-	ld	a, #0b00001001		; IER = EDSSI, ERBFI
-	ld	(#0x4001), a
+	or	#0b00001011
+	ld	(#0x4004), a		; MCR = DTR, RTS, HINT
 	ld	b, #0x01
 	ld	c, #0x06
-	call	0x0a2f			; jp 0x1afb, do something with port 3
+;	call	0x0a2f			; jp 0x1afb, do something with port 3
+;	call	0x33ca			; init modem vars, activate interrupts
+	ld	a, #0b00001001		; IER = EDSSI, ERBFI
+	ld	(#0x4001), a
+	ld	a, (#0x4006)
+	ld	(_modem_curmsr), a	; read and store MSR
 	pop	af
 	out	(#0x06), a		; restore old slot4000device
-	call	0x33ca			; init modem vars, activate interrupts
 	pop	hl
 	pop	bc
 	ret
@@ -266,4 +273,34 @@ _modem_msr::
 	ld	a, h
 	out	(0x06), a
 	ld	h, #0x0
+	ret
+
+; void modem_hangup(void)
+; drop DTR to force a hangup
+_modem_hangup::
+	push	hl
+	in	a, (0x06)
+	ld	h, a
+	ld	a, #0x05
+	out	(0x06), a
+	ld	a, (0x4004)		; read modem MCR
+	res	0, a			; drop DTR
+	ld	(0x4004), a
+	push	af
+	push	hl
+	ld	hl, #500
+	push	hl
+	call	_delay
+	pop	hl
+	pop	hl
+	pop	af
+	set	0, a			; restore DTR
+	ld	a, (0x4006)
+	ld	(_modem_curmsr), a
+	ld	(0x4004), a
+	ld	a, (0x4006)
+	ld	(_modem_curmsr), a
+	ld	a, h
+	out	(0x06), a
+	pop	hl
 	ret

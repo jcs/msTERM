@@ -128,10 +128,10 @@ extern unsigned int csibuflen;
 
 
 /* putchar.s */
-extern unsigned char cursorx;
-extern unsigned char cursory;
-extern unsigned char putchar_sgr;
-extern unsigned char putchar_quick;
+extern volatile unsigned char cursorx;
+extern volatile unsigned char cursory;
+extern volatile unsigned char putchar_sgr;
+extern volatile unsigned char putchar_quick;
 extern unsigned char *font_addr;
 extern void lcd_cas(unsigned char col);
 extern void lcd_sleep(void);
@@ -168,7 +168,9 @@ extern void update_statusbar(char *status, ...);
 
 
 /* modem.s */
-extern unsigned char modem_curmsr;
+extern volatile unsigned char __at(0xf600) modem_buf[];
+extern volatile unsigned char __at(0xf700) modem_buf_pos;
+extern volatile unsigned char modem_curmsr;
 extern int modem_init(void);
 extern int modem_ier(void);
 extern int modem_iir(void);
@@ -176,10 +178,11 @@ extern int modem_lcr(void);
 extern int modem_lsr(void);
 extern char modem_read(void);
 extern void modem_write(char c);
+extern void modem_hangup(void);
 
 
 /* msterm.c */
-extern unsigned char obuf[TEXT_COLS];
-extern unsigned char obuf_pos;
+extern volatile unsigned char __at(0xf500) obuf[];
+extern volatile unsigned char __at(0xf702) obuf_pos;
 
 #endif

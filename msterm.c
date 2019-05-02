@@ -22,21 +22,17 @@
 
 #include "mailstation.h"
 
-/* circular buffer */
-unsigned char obuf[TEXT_COLS];
-unsigned char obuf_pos;
-
 extern volatile unsigned char mem0;
+
+volatile unsigned char __at(0xf500) obuf[];
+volatile unsigned char __at(0xf702) obuf_pos;
+volatile unsigned char __at(0xf600) modem_buf[];
+volatile unsigned char __at(0xf700) modem_buf_pos;
 
 unsigned char lastkey;
 unsigned char esc;
 unsigned char old_modem_msr;
 unsigned char old_minutes;
-
-#define MODEM_BUF	0xf600
-#define MODEM_BUF_POS	0xf700
-volatile unsigned char __at(MODEM_BUF) _modem_buf;
-volatile unsigned char __at(MODEM_BUF_POS) modem_buf_pos;
 
 #define MODEM_MSR_DCD	(1 << 7)
 
@@ -62,7 +58,6 @@ unsigned char statusbar_time[15];
 int main(void)
 {
 	unsigned char *memp = &mem0;
-	unsigned char *modem_buf = &_modem_buf;
 	unsigned char old_obuf_pos;
 	unsigned int b;
 	unsigned char old_modem_buf_pos;
@@ -87,7 +82,7 @@ restart:
 	if (source == SOURCE_MODEM) {
 		printf("powering up modem...");
 		modem_init();
-		printf("\n");
+		putchar('\n');
 		obuf[obuf_pos++] = 'A';
 		obuf[obuf_pos++] = 'T';
 		obuf[obuf_pos++] = '\r';
@@ -100,10 +95,7 @@ restart:
 
 		if (source == SOURCE_MODEM) {
 			while (old_modem_buf_pos != modem_buf_pos) {
-				if (!putchar_quick)
-					putchar_quick = 1;
-
-				//lptsend(modem_buf[old_modem_buf_pos]);
+				putchar_quick = 1;
 				process_input(modem_buf[old_modem_buf_pos]);
 				old_modem_buf_pos++;
 			}
@@ -119,14 +111,13 @@ restart:
 		}
 
 		while (old_obuf_pos != obuf_pos) {
-
 			if (source == SOURCE_MODEM) {
-#if 0
-				lsr = modem_lsr();
-				if (lsr & (1 << 5))
-#endif
+				b = modem_lsr();
+				if (b & (1 << 5)) {
 					/* Transmitter Holding Register Empty (THRE) */
 					modem_write(obuf[old_obuf_pos]);
+				} else
+					continue;
 			} else if (source == SOURCE_LPT) {
 				lptsend(obuf[old_obuf_pos]);
 			} else {
@@ -149,7 +140,7 @@ maybe_update_statusbar(unsigned char force)
 	unsigned char update = 0;
 
 	if (modem_curmsr & MODEM_MSR_DCD)
-		s = 1; /* DCD, change to 'hangup' */
+		s = 1; /* DCD set, call in progress */
 	else
 		s = 0;
 
@@ -202,8 +193,22 @@ process_keyboard(void)
 		break;
 	case KEY_F1:
 		if (modem_curmsr & MODEM_MSR_DCD) {
+			/* hangup, send break */
+			//modem_hangup();
+			obuf[obuf_pos++] = '+';
+			obuf[obuf_pos++] = '+';
+			obuf[obuf_pos++] = '+';
+			obuf[obuf_pos++] = 'A';
+			obuf[obuf_pos++] = 'T';
+			obuf[obuf_pos++] = 'H';
+			obuf[obuf_pos++] = '0';
+			obuf[obuf_pos++] = '\r';
 		}
-
+		break;
+	case KEY_EMAIL:
+		//modem_curmsr = modem_msr();
+		printf("msr: " BYTE_TO_BINARY_PATTERN "\n",
+			BYTE_TO_BINARY(modem_curmsr));
 		break;
 	case KEY_BACK:
 		/* send escape */
@@ -295,13 +300,13 @@ process_input(unsigned char b)
 		while ((cursorx + 1) % 8 != 0)
 			putchar(' ');
 		break;
+	case 26: /* ^Z end of ansi */
+		break;
 	case 27: /* esc */
 		if (esc)
 			/* our previous esc is literal */
 			putchar(b);
 		esc = 1;
-		break;
-	case 26: /* ^Z end of ansi */
 		break;
 	case 91: /* [ */
 		if (esc) {
