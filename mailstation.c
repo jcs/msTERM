@@ -84,6 +84,4 @@ update_statusbar(char *status, ...)
 
 		putchar_attr(LCD_ROWS - 1, x, c, ATTR_REVERSE);
 	}
-
-	redraw_screen();
 }

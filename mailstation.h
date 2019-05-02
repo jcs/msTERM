@@ -76,11 +76,10 @@ extern volatile unsigned char __at(0xdba0) p28shadow;
 #define TEXT_COLS		LCD_COLS			// 64
 #define TEXT_ROWS		(LCD_ROWS - 1)			// 15
 
-#define ATTR_DIRTY		(1 << 0)
-#define ATTR_CURSOR		(1 << 1)
-#define ATTR_REVERSE		(1 << 2)
-#define ATTR_BOLD		(1 << 3)
-#define ATTR_UNDERLINE		(1 << 4)
+#define ATTR_CURSOR		(1 << 0)
+#define ATTR_REVERSE		(1 << 1)
+#define ATTR_BOLD		(1 << 2)
+#define ATTR_UNDERLINE		(1 << 3)
 
 extern char screenbuf[LCD_COLS * LCD_ROWS];
 extern char screenattrs[LCD_COLS * LCD_ROWS];
@@ -139,7 +138,6 @@ extern void lcd_wake(void);
 extern void uncursor(void);
 extern void recursor(void);
 extern void clear_screen(void);
-extern void dirty_screen(void);
 extern void redraw_screen(void);
 extern void scroll_lcd_half(void);
 extern void clear_lcd_half(void);

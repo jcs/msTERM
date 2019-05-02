@@ -52,8 +52,6 @@ _cursory::				; cursor y position, 0-indexed
 	.db	#0
 _putchar_sgr::				; current SGR for putchar()
 	.db	#0
-_putchar_quick::			; when 1, don't call redraw_screen()
-	.db	#0
 
 
 	.area   _GSINIT
@@ -162,52 +160,16 @@ clear_done:
 	ret
 
 
-; void dirty_screen(void)
-; mark every character cell dirty, should follow with redraw_screen()
-_dirty_screen::
-	push	bc
-	push	hl
-	ld	hl, #_screenattrs
-	ld	bc, #(LCD_COLS * LCD_ROWS) - 1
-	add	hl, bc
-dirty_lcd_loop:
-	ld	a, (hl)
-	set	#ATTR_BIT_DIRTY, a
-	ld	(hl), a
-	dec	hl
-	dec	bc
-	ld	a, b
-	cp	#0
-	jr	nz, dirty_lcd_loop
-	ld	a, c
-	cp	#0
-	jr	nz, dirty_lcd_loop
-	pop	hl
-	pop	bc
-	ret
-
-
 ; void redraw_screen(void)
 _redraw_screen::
-	di
 	push	bc
 	push	de
 	push	hl
 	ld	b, #0
 redraw_rows:
-	ld	h, b
-	ld	l, #0
-	call	screenbuf_offset
-	ld	de, #_screenattrs
-	add	hl, de
 	ld	d, b			; store rows in d
 	ld	b, #0
 redraw_cols:
-	ld	a, (hl)
-	bit	#ATTR_BIT_DIRTY, a
-	jr	z, redraw_cols_next
-	res	#ATTR_BIT_DIRTY, a
-	ld	(hl), a
 	push	bc			; XXX figure out what is corrupting
 	push	de			; bc and de in stamp_char, these shouldn't be needed
 	push	hl
@@ -238,14 +200,12 @@ redraw_screen_out:
 	pop	hl
 	pop	de
 	pop	bc
-	ei
 	ret
 
 
 ; void scroll_lcd(void)
 ; scroll entire screen up by FONT_HEIGHT rows, minus statusbar
 _scroll_lcd::
-	di
 	push	bc
 	push	de
 	push	hl
@@ -310,7 +270,6 @@ last_row_zero:
 	ld	h, a
 	ld	l, #0
 	call	screenbuf_offset
-	push	hl
 	ld	de, #_screenbuf
 	add	hl, de
 	ld	d, #0
@@ -322,23 +281,10 @@ last_row_zero_loop:
 	ld	(hl), #' '
 	dec	hl
 	djnz	last_row_zero_loop
-last_row_attr_dirty:
-	ld	b, #LCD_COLS - 1
-	pop	hl			; screenattrs[LCD_COLS * TEXT_ROWS]
-	ld	de, #_screenattrs
-	add	hl, de
-	ld	d, #0
-	ld	e, #LCD_COLS
-	add	hl, de
-last_row_attr_loop:
-	ld	(hl), a
-	dec	hl
-	djnz	last_row_attr_loop
 scroll_lcd_out:
 	pop	hl
 	pop	de
 	pop	bc
-	ei
 	ret
 
 
@@ -566,7 +512,6 @@ right_shift:
 	djnz	right_shift		; -> 10101000
 	ld	-14(ix), c
 	jr	done_left_shift
-	; shift font data and masks to the left 
 prep_left_shift:
 	ld	c, -14(ix)		; mask
 	ld	a, -12(ix)		; (bit offset) times, shift font data
@@ -633,8 +578,16 @@ _uncursor::
 	add	hl, de			; screenattrs[(cursory * TEXT_COLS) + cursorx]
 	ld	a, (hl)
 	res	#ATTR_BIT_CURSOR, a	; &= ~(ATTR_CURSOR)
-	set	#ATTR_BIT_DIRTY, a	; |= (ATTR_DIRTY)
 	ld	(hl), a
+	ld	a, (_cursorx)
+	ld	l, a
+	push	hl
+	ld	a, (_cursory)
+	ld	l, a
+	push	hl
+	call	_stamp_char
+	pop	hl
+	pop	hl
 	pop	hl
 	pop	de
 	ret
@@ -652,7 +605,7 @@ _recursor::
 	ld	de, #_screenattrs
 	add	hl, de			; screenattrs[(cursory * TEXT_COLS) + cursorx]
 	ld	a, (hl)
-	or	#(ATTR_CURSOR | ATTR_DIRTY)
+	set	#ATTR_BIT_CURSOR, a
 	ld	(hl), a
 	pop	hl
 	pop	de
@@ -681,11 +634,11 @@ backspace:
 	ld	(_cursory), a		; cursory--
 	ld	a, #LCD_COLS - 2
 	ld	(_cursorx), a
-	jp	putchar_out
+	jp	putchar_draw_cursor
 cursorx_not_zero:
 	dec	a
 	ld	(_cursorx), a		; cursorx--;
-	jp	putchar_out
+	jp	putchar_draw_cursor
 not_backspace:
 	cp	#'\r'
 	jr	nz, not_cr
@@ -727,11 +680,7 @@ scroll_out:
 	jr	z, cr_or_lf
 	jr	store_char_in_buf
 cr_or_lf:
-	ld	a, (_putchar_quick)
-	cp	#1
-	jr	z, putchar_out
-	call	_redraw_screen
-	jr	putchar_fastout
+	jp	putchar_draw_cursor
 store_char_in_buf:
 	ld	a, (_cursory)
 	ld	h, a
@@ -747,14 +696,22 @@ store_char_in_buf:
 	ld	de, #_screenattrs
 	add	hl, de			; hl = screenattrs[(cursory * LCD_COLS) + cursorx]
 	ld	a, (_putchar_sgr)
-	set	#ATTR_BIT_DIRTY, a
-	ld	(hl), a			; = putchar_sgr | ATTR_DIRTY
+	ld	(hl), a			; = putchar_sgr
+	ld	a, (_cursorx)
+	ld	l, a
+	push	hl
+	ld	a, (_cursory)
+	ld	l, a
+	push	hl
+	call	_stamp_char
+	pop	hl
+	pop	hl
 advance_cursorx:
 	ld	a, (_cursorx)
 	inc	a
 	ld	(_cursorx), a
 	cp	#LCD_COLS		; if (cursorx >= LCD_COLS)
-	jr	c, putchar_out
+	jr	c, putchar_draw_cursor
 	xor	a
 	ld	(_cursorx), a
 	ld	a, (_cursory)
@@ -762,11 +719,11 @@ advance_cursorx:
 	ld	(_cursory), a
 check_cursory:
 	cp	#TEXT_ROWS		; and if (cursory >= TEXT_ROWS)
-	jr	c, putchar_out
+	jr	c, putchar_draw_cursor
 	call	_scroll_lcd
 	ld	a, #TEXT_ROWS - 1
 	ld	(_cursory), a		; cursory = TEXT_ROWS - 1
-putchar_out:
+putchar_draw_cursor:
 	ld	a, (_cursory)
 	ld	h, a
 	ld	a, (_cursorx)
@@ -775,13 +732,17 @@ putchar_out:
 	ld	de, #_screenattrs
 	add	hl, de			; hl = screenattrs[(cursory * LCD_COLS) + cursorx]
 	ld	a, (hl)			; read existing attrs
-	set	#ATTR_BIT_DIRTY, a
 	set	#ATTR_BIT_CURSOR, a
-	ld	(hl), a			; = putchar_sgr | ATTR_DIRTY | ATTR_CURSOR
-	ld	a, (_putchar_quick)
-	cp	#1
-	jr	z, putchar_fastout
-	call	_redraw_screen
+	ld	(hl), a			; = putchar_sgr | ATTR_CURSOR
+	ld	a, (_cursorx)
+	ld	l, a
+	push	hl
+	ld	a, (_cursory)
+	ld	l, a
+	push	hl
+	call	_stamp_char
+	pop	hl
+	pop	hl
 putchar_fastout:
 	pop	hl
 	pop	de
@@ -813,8 +774,14 @@ store_attrs:
 	ld	de, #_screenattrs
 	add	hl, de			; screenattrs[(row * TEXT_COLS) + col]
 	ld	a, 7(ix)
-	set	#ATTR_BIT_DIRTY, a
 	ld	(hl), a
+	ld	l, 5(ix)
+	push	hl
+	ld	l, 4(ix)
+	push	hl
+	call	_stamp_char
+	pop	hl
+	pop	hl
 	pop	hl
 	pop	de
 	ld	sp, ix

@@ -320,6 +320,7 @@ parseCSI(void)
 	}
 
 	if (serviced) {
+		recursor();
 #ifdef DEBUG
 		sprintf(sb, "CSI (%d,%d): ", param1, param2);
 		for (x = 0; x < csibuflen; x++)
@@ -329,7 +330,5 @@ parseCSI(void)
 		csibuflen = 0;
 		csibuf[0] = '\0';
 		in_csi = 0;
-
-		redraw_screen();
 	}
 }

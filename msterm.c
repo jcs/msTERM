@@ -67,7 +67,6 @@ restart:
 	esc = 0;
 	source = SOURCE_MODEM; //LPT;
 	putchar_sgr = 0;
-	putchar_quick = 0;
 	in_csi = 0;
 	csibuflen = 0;
 	obuf_pos = 0;
@@ -95,14 +94,8 @@ restart:
 
 		if (source == SOURCE_MODEM) {
 			while (old_modem_buf_pos != modem_buf_pos) {
-				putchar_quick = 1;
 				process_input(modem_buf[old_modem_buf_pos]);
 				old_modem_buf_pos++;
-			}
-
-			if (putchar_quick) {
-				putchar_quick = 0;
-				redraw_screen();
 			}
 		} else if (source = SOURCE_LPT) {
 			b = lptrecv();

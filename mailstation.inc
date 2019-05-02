@@ -33,13 +33,11 @@
 	; addressing the LCD once it's in slot4000_device
 	.equ	LCD_START,		#0x4038
 
-	.equ	ATTR_BIT_DIRTY,		#0
-	.equ	ATTR_BIT_CURSOR,	#1
-	.equ	ATTR_BIT_REVERSE,	#2
-	.equ	ATTR_BIT_BOLD,		#3
-	.equ	ATTR_BIT_UNDERLINE,	#4
+	.equ	ATTR_BIT_CURSOR,	#0
+	.equ	ATTR_BIT_REVERSE,	#1
+	.equ	ATTR_BIT_BOLD,		#2
+	.equ	ATTR_BIT_UNDERLINE,	#3
 
-	.equ	ATTR_DIRTY,		#(1 << ATTR_BIT_DIRTY)
 	.equ	ATTR_CURSOR,		#(1 << ATTR_CURSOR)
 	.equ	ATTR_REVERSE,		#(1 << ATTR_REVERSE)
 	.equ	ATTR_BOLD,		#(1 << ATTR_BOLD)
