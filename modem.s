@@ -33,7 +33,9 @@ _modem_curmsr::
 	.area	_CODE
 
 _modem_isr::
+	push	af
 	push	hl
+	push	bc
 	ld	l, #1
 	push	hl
 	call	_new_mail
@@ -54,7 +56,8 @@ has_irq:
 no_rls:
 	ld	a, l
 	and	#0b00000100		; received data available or timeout
-	jr	z, no_rda
+	jr	z, modem_isr_out
+	ld	b, #16			; read 16 bytes at a time
 modem_read_loop:
 	push	hl
 	call	_modem_read
@@ -66,15 +69,19 @@ modem_read_loop:
 	ld	(hl), b
 	inc	a
 	ld	(modem_buf_pos), a
+	djnz	check_for_more_bytes
+	jr	modem_isr_out
+check_for_more_bytes:
 	call	_modem_lsr
 	bit	0, l
 	jr	nz, modem_read_loop
-no_rda:
 modem_isr_out:
 	call	_modem_msr		; modem status update
 	ld	a, l
 	ld	(_modem_curmsr), a
+	pop	bc
 	pop	hl
+	pop	af
 	ret
 
 
@@ -118,31 +125,26 @@ _modem_init::
 	pop	hl
 	ld	a, #0
 	out	(#0x26), a		; turn port 26 off
-	ld	hl, #100		; 100
+	ld	hl, #100
 	push	hl
 	call	_delay			; delay 100ms
 	pop	hl
 	ld	a, #0x01
-	out	(#0x26), a
-	ld	hl, #3000		; 3000
+	out	(#0x26), a		; turn port 26 on
+	ld	hl, #3000
 	push	hl
 	call	_delay			; delay 3 seconds
 	pop	hl
 	ld	a, #0x05
 	out	(#0x06), a		; switch slot4000device to modem
-	ld	a, #0b11000111		; 14 byte trigger
-	;ld	a, #0b00000111		; XXX: try 1-byte trigger instead
+	ld	a, #0b11000111		; 14 byte FIFO
 	ld	(#0x4002), a		; FCR = enable FIFO
-;	ld	a, (#0xe62c)		; what variable is at 0xe62c?
-;	or	a
-;	jr	z, skip_dlab
-;	ld	a, #0b10000011
-;	ld	(#0x4003), a		; LCR = DLAB=1, 8n1
-;	ld	a, #0x6
-;	ld	(#0x4000), a		; DLL = 6
-;	ld	a, #0
-;	ld	(#0x4001), a		; DLM = 0 = divisor 6 = baud rate 19200
-;skip_dlab:
+	ld	a, #0b10000011
+	ld	(#0x4003), a		; LCR = DLAB=1, 8n1
+	ld	a, #0x6
+	ld	(#0x4000), a		; DLL = 6
+	ld	a, #0
+	ld	(#0x4001), a		; DLM = 0 = divisor 6 = baud rate 19200
 	ld	a, #0b00000011
 	ld	(#0x4003), a		; LCR = DLAB=0, 8n1
 	ld	a, (#0x4004)		; read MCR
