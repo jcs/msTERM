@@ -198,12 +198,7 @@ process_keyboard(void)
 			obuf[obuf_pos++] = '\r';
 		}
 		break;
-	case KEY_EMAIL:
-		//modem_curmsr = modem_msr();
-		printf("msr: " BYTE_TO_BINARY_PATTERN "\n",
-			BYTE_TO_BINARY(modem_curmsr));
-		break;
-	case KEY_BACK:
+	case KEY_MAIN_MENU:
 		/* send escape */
 		obuf[obuf_pos++] = 27;
 		break;
@@ -240,7 +235,6 @@ process_keyboard(void)
 		obuf[obuf_pos++] = 'C';
 		break;
 	case KEY_SIZE:
-		//clear_screen();
 		redraw_screen();
 		break;
 	default:
