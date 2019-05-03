@@ -5,6 +5,8 @@ modem or parallel port.
 
 msTERM currently targets version 2.54 of the MailStation OS.
 
+![https://i.imgur.com/2l9rXK4.jpg](https://i.imgur.com/2l9rXK4.jpg)
+
 ### Features
 
 - Support for controlling the internal modem through typed `AT` comments
