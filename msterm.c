@@ -53,7 +53,7 @@ unsigned char source;
 #define STATUSBAR_BLANK		"             "
 #define STATUSBAR_SETTINGS	"  Settings   "
 unsigned char statusbar_state;
-unsigned char statusbar_time[15];
+unsigned char statusbar_time[16];
 
 int main(void)
 {
@@ -81,7 +81,7 @@ restart:
 	maybe_update_statusbar(1);
 
 	if (source == SOURCE_MODEM) {
-		printf("powering up modem (%d bps)...", setting_modem_speed);
+		printf("powering up modem (%u bps)...", setting_modem_speed);
 		modem_init();
 		putchar('\n');
 		obuf[obuf_pos++] = 'A';
@@ -146,17 +146,17 @@ maybe_update_statusbar(unsigned char force)
 
 	if ((rtcminutes != old_minutes) || force) {
 		old_minutes = rtcminutes;
-		sprintf(statusbar_time, "   %02d:%02d   ",
+		sprintf(statusbar_time, "| %5u | %02d:%02d ",
+		    setting_modem_speed,
 		    (rtc10hours * 10) + rtchours,
 		    (rtc10minutes * 10) + rtcminutes);
 		update = 1;
 	}
 
 	if (update || force) {
-		update_statusbar("%s%s%s%s%s",
+		update_statusbar("%s%s%s         %s",
 		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP : STATUSBAR_CALL,
 		    STATUSBAR_SETTINGS,
-		    STATUSBAR_BLANK,
 		    STATUSBAR_BLANK,
 		    statusbar_time);
 	}

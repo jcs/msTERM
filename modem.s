@@ -202,9 +202,19 @@ dlab_4800:
 	ld	(#0x4000), a		; DLL = 0x18, baud rate = 4800
 	jr	set_dlab_dlm
 dlab_2400:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #2400
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_default
 	ld	a, #0x30
 	ld	(#0x4000), a		; DLL = 0x30, baud rate = 2400
 	jr	set_dlab_dlm
+dlab_default:
+	ld	hl, #MODEM_DEFAULT_SPEED
+	ld	(_setting_modem_speed), hl
+	jp	dlab_57600		; run through the loop again
 set_dlab_dlm:
 	ld	(#0x4001), a		; DLM = 0
 	ld	a, #0b00000011

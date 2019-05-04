@@ -50,6 +50,8 @@
 	.equ	ATTR_BOLD,		#(1 << ATTR_BOLD)
 	.equ	ATTR_UNDERLINE,		#(1 << ATTR_UNDERLINE)
 
+	.equ	MODEM_DEFAULT_SPEED,	#9600
+
 	; settings
 	.globl	_setting_modem_speed
 	.globl	_setting_modem_quiet

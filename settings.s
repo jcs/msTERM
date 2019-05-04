@@ -26,7 +26,6 @@
 	.equ	settings_ident_0,	'j'
 	.equ	settings_ident_1,	'c'
 	.equ	settings_ident_2,	's'
-	.db	#'j'
 
 	.area	_DATA
 settings_begin:
@@ -35,7 +34,7 @@ settings_ident:
 	.db	#settings_ident_1
 	.db	#settings_ident_2
 _setting_modem_speed:
-	.dw	#2400			; modem.s should set default DLAB to this
+	.dw	#MODEM_DEFAULT_SPEED
 _setting_modem_quiet:
 	.db	#0
 settings_end:
