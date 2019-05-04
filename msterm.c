@@ -76,10 +76,12 @@ restart:
 	debug0 = 0;
 
 	clear_screen();
+	settings_read();
+
 	maybe_update_statusbar(1);
 
 	if (source == SOURCE_MODEM) {
-		printf("powering up modem...");
+		printf("powering up modem (%d bps)...", setting_modem_speed);
 		modem_init();
 		putchar('\n');
 		obuf[obuf_pos++] = 'A';

@@ -183,4 +183,11 @@ extern void modem_hangup(void);
 extern volatile unsigned char __at(0xf500) obuf[];
 extern volatile unsigned char __at(0xf702) obuf_pos;
 
+
+/* settings.s */
+extern volatile unsigned int setting_modem_speed;
+extern volatile unsigned char setting_modem_quiet;
+extern void settings_read(void);
+extern void settings_write(void);
+
 #endif

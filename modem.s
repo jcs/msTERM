@@ -141,10 +141,72 @@ _modem_init::
 	ld	(#0x4002), a		; FCR = enable FIFO
 	ld	a, #0b10000011
 	ld	(#0x4003), a		; LCR = DLAB=1, 8n1
+dlab_57600:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #57600
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_38400
+	ld	a, #0x2
+	ld	(#0x4000), a		; DLL = 2, baud rate = 57600
+	jr	set_dlab_dlm
+dlab_38400:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #38400
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_28800
+	ld	a, #0x3
+	ld	(#0x4000), a		; DLL = 3, baud rate = 38400
+	jr	set_dlab_dlm
+dlab_28800:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #28800
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_19200
+	ld	a, #0x4
+	ld	(#0x4000), a		; DLL = 4, baud rate = 28800
+	jr	set_dlab_dlm
+dlab_19200:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #19200
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_9600
 	ld	a, #0x6
-	ld	(#0x4000), a		; DLL = 6
-	ld	a, #0
-	ld	(#0x4001), a		; DLM = 0 = divisor 6 = baud rate 19200
+	ld	(#0x4000), a		; DLL = 6, baud rate = 19200
+	jr	set_dlab_dlm
+dlab_9600:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #9600
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_4800
+	ld	a, #0x0c
+	ld	(#0x4000), a		; DLL = 0x0c, baud rate = 9600
+	jr	set_dlab_dlm
+dlab_4800:
+	ld	hl, (_setting_modem_speed)
+	ld	de, #4800
+	or	a			; reset c
+	sbc	hl, de
+	add	hl, de
+	jr	c, dlab_2400
+	ld	a, #0x18
+	ld	(#0x4000), a		; DLL = 0x18, baud rate = 4800
+	jr	set_dlab_dlm
+dlab_2400:
+	ld	a, #0x30
+	ld	(#0x4000), a		; DLL = 0x30, baud rate = 2400
+	jr	set_dlab_dlm
+set_dlab_dlm:
+	ld	(#0x4001), a		; DLM = 0
 	ld	a, #0b00000011
 	ld	(#0x4003), a		; LCR = DLAB=0, 8n1
 	ld	a, (#0x4004)		; read MCR

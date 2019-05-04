@@ -26,6 +26,8 @@ all: msterm.bin
 clean:
 	rm -f *.{map,bin,ihx,lst,rel,sym,lk,noi}
 
+# assembly
+
 crt0.rel: crt0.s
 	$(ASZ80) -o $@ $>
 
@@ -41,11 +43,19 @@ getchar.rel: getchar.s
 lpt.rel: lpt.s
 	$(ASZ80) -o $@ $>
 
-mailstation.rel: mailstation.c
-	$(SDCC) -c $@ $>
-
 modem.rel: modem.s
 	$(ASZ80) -o $@ $>
+
+settings.rel: settings.s
+	$(ASZ80) -o $@ $>
+
+# c code
+
+csi.rel: csi.c
+	$(SDCC) -c $@ $>
+
+mailstation.rel: mailstation.c
+	$(SDCC) -c $@ $>
 
 mslib.rel: mslib.c
 	$(SDCC) -c $@ $>
@@ -53,12 +63,9 @@ mslib.rel: mslib.c
 msterm.rel: msterm.c
 	$(SDCC) -c $@ $>
 
-csi.rel: csi.c
-	$(SDCC) -c $@ $>
-
 # code-loc must be far enough to hold _HEADER code in crt0
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel mailstation.rel \
-modem.rel msterm.rel mslib.rel csi.rel
+modem.rel msterm.rel mslib.rel csi.rel settings.rel
 	$(SDCC) --no-std-crt0 --code-loc 0x8100 --data-loc 0x0000 -o $@ $>
 
 msterm.bin: msterm.ihx

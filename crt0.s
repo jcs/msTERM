@@ -23,7 +23,6 @@
 	.include "mailstation.inc"
 	.globl	_main
 	.globl	patch_isr
-	.globl	_lptrecv
 
 	.area	_HEADER (ABS)
 
