@@ -168,6 +168,7 @@ extern void update_statusbar(char *status, ...);
 /* modem.s */
 extern volatile unsigned char __at(0xf600) modem_buf[];
 extern volatile unsigned char __at(0xf700) modem_buf_pos;
+extern volatile unsigned char __at(0xf702) modem_buf_read_pos;
 extern volatile unsigned char modem_curmsr;
 extern int modem_init(void);
 extern int modem_ier(void);
@@ -181,7 +182,7 @@ extern void modem_hangup(void);
 
 /* msterm.c */
 extern volatile unsigned char __at(0xf500) obuf[];
-extern volatile unsigned char __at(0xf702) obuf_pos;
+extern volatile unsigned char __at(0xf704) obuf_pos;
 
 
 /* settings.s */

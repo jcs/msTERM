@@ -25,9 +25,10 @@
 extern volatile unsigned char mem0;
 
 volatile unsigned char __at(0xf500) obuf[];
-volatile unsigned char __at(0xf702) obuf_pos;
+volatile unsigned char __at(0xf704) obuf_pos;
 volatile unsigned char __at(0xf600) modem_buf[];
 volatile unsigned char __at(0xf700) modem_buf_pos;
+volatile unsigned char __at(0xf702) modem_buf_read_pos;
 
 unsigned char lastkey;
 unsigned char esc;
@@ -55,12 +56,21 @@ unsigned char source;
 unsigned char statusbar_state;
 unsigned char statusbar_time[16];
 
+void
+obuf_queue(unsigned char *c)
+{
+	unsigned char l = strlen(c);
+	unsigned char x;
+
+	for (x = 0; x < strlen(c); x++)
+		obuf[obuf_pos++] = c[x];
+}
+
 int main(void)
 {
 	unsigned char *memp = &mem0;
 	unsigned char old_obuf_pos;
 	unsigned int b;
-	unsigned char old_modem_buf_pos;
 
 restart:
 	lastkey = 0;
@@ -84,20 +94,17 @@ restart:
 		printf("powering up modem (%u bps)...", setting_modem_speed);
 		modem_init();
 		putchar('\n');
-		obuf[obuf_pos++] = 'A';
-		obuf[obuf_pos++] = 'T';
-		obuf[obuf_pos++] = '\r';
-
-		old_modem_buf_pos = modem_buf_pos;
+		obuf_queue("AT&F0+MS=11,1,300,14400M0Q0L0&K5\r");
+		modem_buf_read_pos = modem_buf_pos;
 	}
 
 	for (;;) {
 		process_keyboard();
 
 		if (source == SOURCE_MODEM) {
-			while (old_modem_buf_pos != modem_buf_pos) {
-				process_input(modem_buf[old_modem_buf_pos]);
-				old_modem_buf_pos++;
+			while (modem_buf_read_pos != modem_buf_pos) {
+				process_input(modem_buf[modem_buf_read_pos]);
+				modem_buf_read_pos++;
 			}
 		} else if (source = SOURCE_LPT) {
 			b = lptrecv();
@@ -190,14 +197,7 @@ process_keyboard(void)
 		if (modem_curmsr & MODEM_MSR_DCD) {
 			/* hangup, send break */
 			//modem_hangup();
-			obuf[obuf_pos++] = '+';
-			obuf[obuf_pos++] = '+';
-			obuf[obuf_pos++] = '+';
-			obuf[obuf_pos++] = 'A';
-			obuf[obuf_pos++] = 'T';
-			obuf[obuf_pos++] = 'H';
-			obuf[obuf_pos++] = '0';
-			obuf[obuf_pos++] = '\r';
+			obuf_queue("+++ATH0\r");
 		}
 		break;
 	case KEY_MAIN_MENU:

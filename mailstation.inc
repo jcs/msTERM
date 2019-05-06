@@ -17,6 +17,7 @@
 	; circular char[] buffer offset by *modem_buf_pos
 	.equ	modem_buf,		#0xf600
 	.equ	modem_buf_pos,		#0xf700
+	.equ	modem_buf_read_pos,	#0xf702
 
 	; some random dataflash location (0x18000) that looked empty
 	.equ	settings_page,		#6
@@ -50,7 +51,7 @@
 	.equ	ATTR_BOLD,		#(1 << ATTR_BOLD)
 	.equ	ATTR_UNDERLINE,		#(1 << ATTR_UNDERLINE)
 
-	.equ	MODEM_DEFAULT_SPEED,	#9600
+	.equ	MODEM_DEFAULT_SPEED,	#300
 
 	; settings
 	.globl	_setting_modem_speed
