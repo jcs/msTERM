@@ -40,19 +40,6 @@ from the `0x4000` area, as well as the `.org` line in `crt0.s`.
 
 Load the compiled `obj/msterm.bin` to the `dataflash`... somehow.
 
-### TODO
-
-- Make `putchar` faster (probably just `stamp_char`) because it is currently
-  too slow to keep the modem at a high speed without dropping data.
-
-- Add an actual Settings menu to change modem speed through DLAB, speaker
-  volume from automated calls, etc.  This will require persisting settings to a
-  dataflash page somewhere.
-
-- Add a Call menu to dial saved phone numbers
-
-- Maybe add battery level to status bar
-
 ### License
 
 Copyright (c) 2019 [joshua stein](https://jcs.org/)

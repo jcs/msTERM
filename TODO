@@ -1,0 +1,12 @@
+- Make `putchar` faster (probably just `stamp_char`) because it is currently
+  too slow to keep the modem at a high speed without dropping data.  We may
+  be able to just get away with using flow control here if we can't make things
+  fast enough.
+
+- Add an actual Settings menu to change modem speed through DLAB, speaker
+  volume from automated calls, etc.  This will require persisting settings to a
+  dataflash page somewhere.
+
+- Add a Call menu to dial saved phone numbers.
+
+- Maybe add battery level to status bar?
