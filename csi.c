@@ -111,38 +111,40 @@ parseCSI(void)
 
 	uncursor();
 
+#ifdef DEBUG
+	sprintf(sb, "CSI:");
+	for (x = 0; x < csibuflen; x++)
+		sprintf(sb, "%s%c", sb, csibuf[x]);
+	sprintf(sb, "%s params:%d,%d", sb, param1, param2);
+	update_statusbar(sb);
+#endif
+
 	switch (c) {
 	case 'A': /* CUU - cursor up */
-		for (x = 0; x < param1; x++)
-			if (cursory > 0)
-				cursory--;
+		for (x = 0; x < param1 && cursory > 0; x++)
+			cursory--;
 		break;
 	case 'B': /* CUD - cursor down */
-		for (x = 0; x < param1; x++)
-			if (cursory < TEXT_ROWS - 1)
-				cursory++;
+		for (x = 0; x < param1 && cursory < TEXT_ROWS - 1; x++)
+			cursory++;
 		break;
 	case 'C': /* CUF - cursor forward */
-		for (x = 0; x < param1; x++)
-			if (cursorx < TEXT_COLS)
-				cursorx++;
+		for (x = 0; x < param1 && cursorx < TEXT_COLS; x++)
+			cursorx++;
 		break;
 	case 'D': /* CUB - cursor back */
-		for (x = 0; x < param1; x++)
-			if (cursorx > 0)
-				cursorx--;
+		for (x = 0; x < param1 && cursorx > 0; x++)
+			cursorx--;
 		break;
 	case 'E': /* CNL - cursor next line */
 		cursorx = 0;
-		for (x = 0; x < param1; x++)
-			if (cursory < TEXT_ROWS - 1)
-				cursory++;
+		for (x = 0; x < param1 && cursory < TEXT_ROWS - 1; x++)
+			cursory++;
 		break;
 	case 'F': /* CPL - cursor previous line */
 		cursorx = 0;
-		for (x = 0; x < param1; x++)
-			if (cursory > 0)
-				cursory--;
+		for (x = 0; x < param1 && cursory > 0; x++)
+			cursory--;
 		break;
 	case 'G': /* CHA - cursor horizontal absolute */
 		if (param1 > TEXT_COLS)
@@ -164,51 +166,59 @@ parseCSI(void)
 			cursorx = TEXT_COLS - 1;
 		else
 			cursorx = param2 - 1;
-
 		break;
 	case 'J': /* ED - erase in display */
-		if (param1 == 0) {
+		switch (param1) {
+		case 0:
 			/* clear from cursor to end of screen */
 			for (y = cursory; y < TEXT_ROWS; y++) {
 				for (x = 0; x < TEXT_COLS; x++) {
 					if (y == cursory && x < cursorx)
 						continue;
 
-					putchar_attr(x, y, ' ', 0);
+					putchar_attr(y, x, ' ', 0);
 				}
 			}
-		} else if (param1 == 1) {
+			break;
+		case 1:
 			/* clear from cursor to beginning of the screen */
 			for (y = cursory; y >= 0; y--) {
 				for (x = TEXT_COLS; x >= 0; x--) {
 					if (y == cursory && x > cursorx)
 						continue;
 
-					putchar_attr(x, y, ' ', 0);
+					putchar_attr(y, x, ' ', 0);
 				}
 			}
-		} else if (param1 == 2) {
+			break;
+		case 2:
 			/* clear entire screen */
 			for (y = 0; y < TEXT_ROWS; y++) {
 				for (x = 0; x < TEXT_COLS; x++)
-					putchar_attr(x, y, ' ', 0);
+					putchar_attr(y, x, ' ', 0);
 			}
 		}
-
 		break;
 	case 'K': /* EL - erase in line */
-		if (param1 == 0) {
+		switch (param1) {
+		case 0:
 			/* clear from cursor to end of line */
+			if (cursorx >= TEXT_COLS)
+				break;
 			for (x = cursorx; x < TEXT_COLS; x++)
-				putchar_attr(x, cursory, ' ', 0);
-		} else if (param1 == 1) {
+				putchar_attr(cursory, x, ' ', 0);
+			break;
+		case 1:
 			/* clear from cursor to beginning of line */
+			if (cursorx == 0)
+				break;
 			for (x = cursorx; x >= 0; x--)
-				putchar_attr(x, cursory, ' ', 0);
-		} else if (param1 == 2) {
+				putchar_attr(cursory, x, ' ', 0);
+			break;
+		case 2:
 			/* clear entire line */
 			for (x = 0; x < TEXT_COLS - 1; x++)
-				putchar_attr(x, cursory, ' ', 0);
+				putchar_attr(cursory, x, ' ', 0);
 		}
 		break;
 	case 'S': /* SU - scroll up */
@@ -276,19 +286,18 @@ parseCSI(void)
 		}
 
 		putchar_sgr = param2;
-		putchar_attr(cursorx, cursory, screenbuf[off], param2);
 
 		break;
 	case 'n': /* DSR - device status report */
 		if (param1 == 5) {
 			/* ok */
-			obuf[obuf_pos++] = 27;
+			obuf[obuf_pos++] = ESC;
 			obuf[obuf_pos++] = '[';
 			obuf[obuf_pos++] = '0';
 			obuf[obuf_pos++] = 'n';
 		} else if (param1 == 6) {
 			/* CPR - report cursor position */
-			obuf[obuf_pos++] = 27;
+			obuf[obuf_pos++] = ESC;
 			obuf[obuf_pos++] = '[';
 
 			itoa(cursory + 1, parambuf, 10);
@@ -321,12 +330,6 @@ parseCSI(void)
 
 	if (serviced) {
 		recursor();
-#ifdef DEBUG
-		sprintf(sb, "CSI (%d,%d): ", param1, param2);
-		for (x = 0; x < csibuflen; x++)
-			sprintf(sb, "%s%c", sb, csibuf[x]);
-		update_statusbar(sb);
-#endif
 		csibuflen = 0;
 		csibuf[0] = '\0';
 		in_csi = 0;

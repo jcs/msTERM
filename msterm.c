@@ -106,7 +106,7 @@ restart:
 				process_input(modem_buf[modem_buf_read_pos]);
 				modem_buf_read_pos++;
 			}
-		} else if (source = SOURCE_LPT) {
+		} else if (source == SOURCE_LPT) {
 			b = lptrecv();
 			if (b <= 0xff)
 				process_input(b & 0xff);
@@ -115,10 +115,10 @@ restart:
 		while (old_obuf_pos != obuf_pos) {
 			if (source == SOURCE_MODEM) {
 				b = modem_lsr();
-				if (b & (1 << 5)) {
+				if (b & (1 << 5))
 					/* Transmitter Holding Register Empty (THRE) */
 					modem_write(obuf[old_obuf_pos]);
-				} else
+				else
 					continue;
 			} else if (source == SOURCE_LPT) {
 				lptsend(obuf[old_obuf_pos]);
@@ -202,42 +202,43 @@ process_keyboard(void)
 		break;
 	case KEY_MAIN_MENU:
 		/* send escape */
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		break;
 	case KEY_PAGE_UP:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = '5';
 		obuf[obuf_pos++] = '~';
 		break;
 	case KEY_PAGE_DOWN:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = '6';
 		obuf[obuf_pos++] = '~';
 		break;
 	case KEY_UP:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = 'A';
 		break;
 	case KEY_DOWN:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = 'B';
 		break;
 	case KEY_LEFT:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = 'D';
 		break;
 	case KEY_RIGHT:
-		obuf[obuf_pos++] = 27;
+		obuf[obuf_pos++] = ESC;
 		obuf[obuf_pos++] = '[';
 		obuf[obuf_pos++] = 'C';
 		break;
 	case KEY_SIZE:
 		redraw_screen();
+		maybe_update_statusbar(1);
 		break;
 	default:
 		if (b >= META_KEY_BEGIN)
@@ -263,7 +264,7 @@ process_input(unsigned char b)
 			csibuflen = 0;
 		}
 
-		if (b == 27) {
+		if (b == ESC) {
 			/* esc, maybe new csi, dump previous */
 			parseCSI();
 			in_csi = 0;
@@ -291,7 +292,7 @@ process_input(unsigned char b)
 		break;
 	case 26: /* ^Z end of ansi */
 		break;
-	case 27: /* esc */
+	case ESC: /* esc */
 		if (esc)
 			/* our previous esc is literal */
 			putchar(b);

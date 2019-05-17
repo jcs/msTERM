@@ -96,6 +96,8 @@ extern char screenattrs[LCD_COLS * LCD_ROWS];
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0')
 
+#define ESC			0x1b				// \e
+
 
 /* for debugging access from asm */
 extern unsigned char debug0;
@@ -162,7 +164,6 @@ extern int lptrecv(void);
 /* mailstation.c */
 extern unsigned char *firmware_version;
 extern void setup(void);
-extern void update_statusbar(char *status, ...);
 
 
 /* modem.s */
@@ -183,6 +184,7 @@ extern void modem_hangup(void);
 /* msterm.c */
 extern volatile unsigned char __at(0xf500) obuf[];
 extern volatile unsigned char __at(0xf704) obuf_pos;
+extern void update_statusbar(char *status, ...);
 
 
 /* settings.s */
