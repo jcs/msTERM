@@ -227,7 +227,7 @@ _scroll_lcd::
 	ld	a, l
 	out	(#05), a
 shift_bufs:
-	ld	b, #1
+	ld	b, #0
 screenbuf_shift_loop:
 	ld	h, b
 	ld	l, #0
@@ -240,14 +240,14 @@ screenbuf_shift_loop:
 	pop	de			; de = screenbuf[b * LCD_COLS]
 	push	bc
 	ld	bc, #LCD_COLS
-	ldir
+	ldir				; ld (de), (hl), de++, hl++, bc--
 	pop	bc
 	inc	b
 	ld	a, b
 	cp	#TEXT_ROWS - 1
 	jr	nz, screenbuf_shift_loop
 screenattrs_shift:
-	ld	b, #1
+	ld	b, #0
 screenattrs_shift_loop:
 	ld	h, b
 	ld	l, #0
@@ -532,7 +532,7 @@ done_left_shift:
 	ld	b, a
 	ld	a, c
 	cpl
-	ld	-14(ix), a		; invert mask
+	ld	-14(ix), a		; store inverted mask
 	ld	a, b
 read_lcd_data:
 	ld	h, -10(ix)
