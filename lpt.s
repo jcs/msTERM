@@ -46,7 +46,7 @@ wait_for_strobe:
 	in	a, (STATUS)
 	and	#LPT_STROBE_IN		; inb(STATUS) & stbin
 	jr	nz, got_strobe
-	jr	wait_for_strobe
+	djnz	wait_for_strobe
 strobe_failed:
 	ld	h, #1
 	ld	l, #0
@@ -65,7 +65,7 @@ wait_for_unstrobe:
 	in	a, (STATUS)
 	and	#LPT_STROBE_IN		; inb(STATUS) & stbin
 	jr	z, lptrecv_tribble_out
-	jr	wait_for_unstrobe
+	djnz	wait_for_unstrobe
 	; if we never get unstrobe, that's ok
 lptrecv_tribble_out:
 	ld	a, #LPT_BUSY_OUT	; raise busy/ack
