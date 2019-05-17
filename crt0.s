@@ -1,7 +1,7 @@
 ; vim:syntax=z8a:ts=8
 ;
-; crt0
 ; msTERM
+; crt0
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;

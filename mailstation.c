@@ -1,6 +1,6 @@
 /*
- * mailstation utility functions
  * msTERM
+ * mailstation utility functions
  *
  * Copyright (c) 2019 joshua stein <jcs@jcs.org>
  *

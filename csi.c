@@ -1,6 +1,6 @@
 /*
- * ANSI CSI parser
  * msTERM
+ * ANSI CSI parser
  *
  * Copyright (c) 2019 joshua stein <jcs@jcs.org>
  *

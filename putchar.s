@@ -1,7 +1,7 @@
 ; vim:syntax=z8a:ts=8
 ;
-; putchar
 ; msTERM
+; putchar
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;

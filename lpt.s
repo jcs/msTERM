@@ -1,7 +1,7 @@
 ; vim:syntax=z8a:ts=8
 ;
-; parallel port routines
 ; msTERM
+; parallel port routines
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;

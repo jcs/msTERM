@@ -1,7 +1,7 @@
 ; vim:syntax=z8a:ts=8
 ;
-; getchar and other keyboard routines
 ; msTERM
+; getchar and other keyboard routines
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;

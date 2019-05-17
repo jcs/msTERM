@@ -1,8 +1,8 @@
 ; vim:syntax=z8a:ts=8
 ;
+; msTERM
 ; settings routines manipulating dataflash
 ; https://github.com/jcs/mailstation-tools/blob/master/docs/flash-28SF040.pdf
-; msTERM
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;

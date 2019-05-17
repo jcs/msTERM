@@ -1,7 +1,7 @@
 ; vim:syntax=z8a:ts=8
 ;
-; interrupt service routine
 ; msTERM
+; interrupt service routine
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;
@@ -27,7 +27,7 @@
 
 	; we're going to put 0xf7 at 0xf800 - 0xf8ff and then put 0xf8 in the
 	; 'i' register.  when an interrupt happens in interrupt mode 2, some
-	; garbage will be on the bus and form an address 0xf800+garbage.
+	; garbage byte will be on the bus and form an address 0xf800+garbage.
 	; the cpu will then read that address+1 which we know will contain
 	; 0xf7f7, and then jump to 0xf7f7, which we contain our own code,
 	; which will just be a 'jp isr' to our real ISR

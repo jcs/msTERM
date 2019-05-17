@@ -1,6 +1,6 @@
 /*
- * utility functions
  * msTERM
+ * utility functions
  *
  * Copyright (c) 2019 joshua stein <jcs@jcs.org>
  *

@@ -1,8 +1,8 @@
 ; vim:syntax=z8a:ts=8
 ;
+; msTERM
 ; modem routines for Rockwell RCV336DPFSP
 ; https://github.com/jcs/mailstation-tools/blob/master/docs/modem-RCV336DPFSP.pdf
-; msTERM
 ;
 ; Copyright (c) 2019 joshua stein <jcs@jcs.org>
 ;
