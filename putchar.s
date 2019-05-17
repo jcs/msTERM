@@ -206,6 +206,7 @@ redraw_screen_out:
 ; void scroll_lcd(void)
 ; scroll entire screen up by FONT_HEIGHT rows, minus statusbar
 _scroll_lcd::
+	di
 	push	bc
 	push	de
 	push	hl
@@ -285,6 +286,7 @@ scroll_lcd_out:
 	pop	hl
 	pop	de
 	pop	bc
+	ei
 	ret
 
 
@@ -365,8 +367,6 @@ multiply_srow_out:
 
 ; void stamp_char(unsigned int row, unsigned int col)
 ; row at 4(ix), col at 6(ix)
-; TODO: store last col group, compare to -11(ix) and if same, don't bother
-; changing LCD_CAS and re-reading 4038 data
 _stamp_char::
 	push	ix
 	ld	ix, #0
@@ -374,7 +374,7 @@ _stamp_char::
 	push	bc
 	push	de
 	push	hl
-	ld	hl, #-14		; stack bytes for local storage
+	ld	hl, #-15		; stack bytes for local storage
 	add	hl, sp
 	ld	sp, hl
  	in	a, (#06)
@@ -433,6 +433,7 @@ pluck_offset:
 	ld	a, b
 	and	#0b00000111		; lower 3 bits are offset
 	ld	-12(ix), a		; stack[-12] = offset
+	ld	-15(ix), #0		; stack[-15] = previous lcd col
 	ld	d, #FONT_HEIGHT		; for (row = FONT_HEIGHT; row >= 0; row--)
 next_char_row:
 	ld	a, d
@@ -491,11 +492,15 @@ determine_cas:
 	ld	c, a			; c = number of right shifts
 skip_advance:
 do_lcd_cas:
+	ld	a, -15(ix)		; previous lcd cas
+	cp	b
+	jr	z, prep_right_shift
 	ld	h, #0
 	ld	l, b
 	push	hl
 	call	_lcd_cas
 	pop	hl
+	ld	-15(ix), b		; store lcd col for next round
 	; if this character doesn't fit entirely in one lcd column, we need to
 	; span two of them and on the left one, shift font data and masks right
 	; to remove right-most bits that will be on the next column
@@ -553,7 +558,7 @@ stamp_char_out:
 	out	(#06), a
 	ld	a, -4(ix)		; restore slot4000page
 	out	(#05), a
-	ld	hl, #14			; remove stack bytes
+	ld	hl, #15			; remove stack bytes
 	add	hl, sp
 	ld	sp, hl
 	pop	hl
