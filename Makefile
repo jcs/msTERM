@@ -19,6 +19,8 @@
 ASZ80	?= sdasz80 -l
 SDCC	?= sdcc -mz80
 
+SRCDIR	?= ${.CURDIR}
+
 OBJ	?= obj/
 
 all: msterm.bin
@@ -29,49 +31,54 @@ clean:
 # assembly
 
 crt0.rel: crt0.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
 isr.rel: isr.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
-putchar.rel: putchar.s
-	$(ASZ80) -o $@ $>
+putchar.rel: putchar.s $(SRCDIR)/font/spleen-5x8.inc
+	$(ASZ80) -o ${.TARGET} $(SRCDIR)/putchar.s
 
 getchar.rel: getchar.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
 lpt.rel: lpt.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
 modem.rel: modem.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
 settings.rel: settings.s
-	$(ASZ80) -o $@ $>
+	$(ASZ80) -o ${.TARGET} $>
 
 # c code
 
 csi.rel: csi.c
-	$(SDCC) -c $@ $>
+	$(SDCC) -c ${.TARGET} $>
 
 mailstation.rel: mailstation.c
-	$(SDCC) -c $@ $>
+	$(SDCC) -c ${.TARGET} $>
 
 mslib.rel: mslib.c
-	$(SDCC) -c $@ $>
+	$(SDCC) -c ${.TARGET} $>
 
 msterm.rel: msterm.c
-	$(SDCC) -c $@ $>
+	$(SDCC) -c ${.TARGET} $>
+
+# generated code
+
+font/spleen-5x8.inc: font/spleen-5x8.hex
+	ruby $(SRCDIR)/tools/hexfont2inc.rb $> > $(SRCDIR)/${.TARGET}
 
 # code-loc must be far enough to hold _HEADER code in crt0
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel mailstation.rel \
 modem.rel msterm.rel mslib.rel csi.rel settings.rel
-	$(SDCC) --no-std-crt0 --code-loc 0x8100 --data-loc 0x0000 -o $@ $>
+	$(SDCC) --no-std-crt0 --code-loc 0x8100 --data-loc 0x0000 -o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
 	hex2bin msterm.ihx >/dev/null
-	@if [ `stat -f '%z' $@` -gt 16384 ]; then \
-		echo "$@ overflows a dataflash page, must be <= 16384"; \
+	@if [ `stat -f '%z' ${.TARGET}` -gt 16384 ]; then \
+		echo "${.TARGET} overflows a dataflash page, must be <= 16384"; \
 		exit 1; \
 	fi
 
