@@ -136,6 +136,30 @@ restart:
 }
 
 void
+update_statusbar(char *status, ...)
+{
+	va_list args;
+	char tstatus[255], c;
+	char *result = NULL;
+	unsigned char x, l;
+
+	va_start(args, status);
+	vsprintf(tstatus, status, args);
+	va_end(args);
+
+	l = strlen(tstatus);
+
+	for (x = 0; x < TEXT_COLS; x++) {
+		if (x >= l)
+			c = ' ';
+		else
+			c = tstatus[x];
+
+		putchar_attr(LCD_ROWS - 1, x, c, ATTR_REVERSE);
+	}
+}
+
+void
 maybe_update_statusbar(unsigned char force)
 {
 	unsigned char s;
