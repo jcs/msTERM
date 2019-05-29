@@ -53,6 +53,9 @@
 
 	.equ	MODEM_DEFAULT_SPEED,	#300
 
+	.globl	_saved_cursorx
+	.globl	_saved_cursory
+
 	; settings
 	.globl	_setting_modem_speed
 	.globl	_setting_modem_quiet

@@ -28,6 +28,9 @@ unsigned int csibuflen;
 
 unsigned char in_csi;
 
+volatile unsigned char saved_cursorx;
+volatile unsigned char saved_cursory;
+
 void
 parseCSI(void)
 {
@@ -57,6 +60,10 @@ parseCSI(void)
 	case 'T':
 	case 'd':
 	case 'g':
+	case 's':
+	case 'u':
+	case '7':
+	case '8':
 		/* optional multiplier */
 		if (c == 'J' || c == 'K')
 			param1 = 0;
@@ -120,19 +127,19 @@ parseCSI(void)
 #endif
 
 	switch (c) {
-	case 'A': /* CUU - cursor up */
+	case 'A': /* CUU - cursor up, stop at top of screen */
 		for (x = 0; x < param1 && cursory > 0; x++)
 			cursory--;
 		break;
-	case 'B': /* CUD - cursor down */
+	case 'B': /* CUD - cursor down, stop at bottom of screen */
 		for (x = 0; x < param1 && cursory < TEXT_ROWS - 1; x++)
 			cursory++;
 		break;
-	case 'C': /* CUF - cursor forward */
+	case 'C': /* CUF - cursor forward, stop at screen edge */
 		for (x = 0; x < param1 && cursorx < TEXT_COLS; x++)
 			cursorx++;
 		break;
-	case 'D': /* CUB - cursor back */
+	case 'D': /* CUB - cursor back, stop at left edge of screen */
 		for (x = 0; x < param1 && cursorx > 0; x++)
 			cursorx--;
 		break;
@@ -289,14 +296,14 @@ parseCSI(void)
 
 		break;
 	case 'n': /* DSR - device status report */
-		if (param1 == 5) {
-			/* ok */
+		switch (param1) {
+		case 5: /* terminal is ready */
 			obuf[obuf_pos++] = ESC;
 			obuf[obuf_pos++] = '[';
 			obuf[obuf_pos++] = '0';
 			obuf[obuf_pos++] = 'n';
-		} else if (param1 == 6) {
-			/* CPR - report cursor position */
+			break;
+		case 6: /* CPR - report cursor position */
 			obuf[obuf_pos++] = ESC;
 			obuf[obuf_pos++] = '[';
 
@@ -316,7 +323,18 @@ parseCSI(void)
 			}
 
 			obuf[obuf_pos++] = 'R';
+			break;
 		}
+		break;
+	case '7': /* DECSC - save cursor */
+	case 's': /* from ANSI.SYS */
+		saved_cursorx = cursorx;
+		saved_cursory = cursory;
+		break;
+	case '8': /* DECRC - restore cursor */
+	case 'u': /* from ANSI.SYS */
+		cursorx = saved_cursorx;
+		cursory = saved_cursory;
 		break;
 	default:
 		/*

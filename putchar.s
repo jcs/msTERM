@@ -110,6 +110,8 @@ reset_cursor:
 	xor	a
 	ld	(_cursorx), a
 	ld	(_cursory), a
+	ld	(_saved_cursorx), a
+	ld	(_saved_cursory), a
 	ld	(_putchar_sgr), a
 zero_screenbuf:
 	ld	hl, #_screenbuf

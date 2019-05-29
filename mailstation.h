@@ -62,7 +62,7 @@ extern volatile unsigned char __at(0xdba0) p28shadow;
 #define LCD_START		0x4038
 
 /* LCD parameters (2 screens) */
-#define LCD_WIDTH		(160 * 2)			// 320
+#define LCD_WIDTH		(160 * 2)	// 320
 #define LCD_HEIGHT		128
 #define LCD_COL_GROUPS		20
 #define LCD_COL_GROUP_WIDTH	8
@@ -96,7 +96,9 @@ extern char screenattrs[LCD_COLS * LCD_ROWS];
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0')
 
-#define ESC			0x1b				// \e
+#define ESC			0x1b	// \e
+#define XON			0x11	// ^Q
+#define XOFF			0x13	// ^S
 
 
 /* for debugging access from asm */
@@ -122,6 +124,8 @@ extern void itoa(int value, char *string, int radix);
 
 
 /* csi.c */
+extern volatile unsigned char saved_cursorx;
+extern volatile unsigned char saved_cursory;
 extern void parseCSI(void);
 extern unsigned char in_csi;
 extern unsigned char csibuf[TEXT_COLS];
