@@ -94,6 +94,9 @@ boot:
 	ld	a, (#05)
 	ld	(startup_slot4000page), a
 
+	xor	a
+	out	(#0x0d), a		; put the cpu in its highest speed
+
 	call    gsinit			; initialize global variables
 	call	patch_isr		; install new ISR
 	call	_main			; main c code
