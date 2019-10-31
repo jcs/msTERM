@@ -76,11 +76,11 @@ modem.rel msterm.rel mslib.rel csi.rel settings.rel
 	$(SDCC) --no-std-crt0 --code-loc 0x8100 --data-loc 0x0000 -o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
-	hex2bin msterm.ihx >/dev/null
+	objcopy -Iihex -Obinary $> $@
 	@if [ `stat -f '%z' ${.TARGET}` -gt 16384 ]; then \
 		echo "${.TARGET} overflows a dataflash page, must be <= 16384"; \
 		exit 1; \
 	fi
 
 upload: all
-	nc -N 192.168.1.129 12345 < msterm.bin
+	sudo ../../mailstation-tools/obj/sendload -p 0x4000 msterm.bin

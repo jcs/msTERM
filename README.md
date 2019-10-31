@@ -23,9 +23,7 @@ status bar
 ### Compiling
 
 Install
-[SDCC](http://sdcc.sourceforge.net/)
-and
-[hex2bin](https://sourceforge.net/projects/hex2bin/files/hex2bin/).
+[SDCC](http://sdcc.sourceforge.net/).
 
 Create an `obj` directory with `mkdir obj` and then run `make`.
 
