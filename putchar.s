@@ -54,10 +54,6 @@ _putchar_sgr::				; current SGR for putchar()
 	.db	#0
 
 
-	.area   _GSINIT
-
-	call	_clear_screen
-
 	.area   _CODE
 
 ; void lcd_cas(unsigned char col)
@@ -90,22 +86,22 @@ _clear_screen::
 	push	bc
 	push	de
 	push	hl
- 	in	a, (#06)
- 	ld	h, a			; slot4000 device
- 	in	a, (#05)
- 	ld	l, a			; slot4000 page
+ 	in	a, (#SLOT_DEVICE)
+ 	ld	h, a
+ 	in	a, (#SLOT_PAGE)
+ 	ld	l, a
 	ld	a, #DEVICE_LCD_RIGHT
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	push	hl
 	call	_clear_lcd_half
 	ld	a, #DEVICE_LCD_LEFT
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	call	_clear_lcd_half
 	pop	hl
 	ld	a, h
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	a, l
-	out	(#05), a
+	out	(#SLOT_PAGE), a
 reset_cursor:
 	xor	a
 	ld	(_cursorx), a
@@ -134,7 +130,7 @@ clear_screen_out:
 
 
 ; void clear_lcd_half(void)
-; zero out the current LCD module (must already be in slot4000device)
+; zero out the current LCD module (must already be in SLOT_DEVICE)
 ; from v2.54 firmware at 0x2490
 _clear_lcd_half::
 	push	bc
@@ -212,22 +208,22 @@ _scroll_lcd::
 	push	bc
 	push	de
 	push	hl
- 	in	a, (#06)
- 	ld	h, a			; slot4000 device
- 	in	a, (#05)
- 	ld	l, a			; slot4000 page
+ 	in	a, (#SLOT_DEVICE)
+ 	ld	h, a
+ 	in	a, (#SLOT_PAGE)
+ 	ld	l, a
 	push	hl
 	ld	a, #DEVICE_LCD_LEFT
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	call	_scroll_lcd_half
 	ld	a, #DEVICE_LCD_RIGHT
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	call	_scroll_lcd_half
 	pop	hl
 	ld	a, h
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	a, l
-	out	(#05), a
+	out	(#SLOT_PAGE), a
 shift_bufs:
 	ld	b, #0
 screenbuf_shift_loop:
@@ -379,10 +375,10 @@ _stamp_char::
 	ld	hl, #-15		; stack bytes for local storage
 	add	hl, sp
 	ld	sp, hl
- 	in	a, (#06)
- 	ld	-3(ix), a		; stack[-3] = slot4000 device
- 	in	a, (#05)
- 	ld	-4(ix), a		; stack[-4] = slot4000 page
+ 	in	a, (#SLOT_DEVICE)
+ 	ld	-3(ix), a		; stack[-3] = old slot device
+ 	in	a, (#SLOT_PAGE)
+ 	ld	-4(ix), a		; stack[-4] = old slot page
 find_char:
 	ld	h, 4(ix)
 	ld	l, 6(ix)
@@ -475,7 +471,7 @@ leftside:
 rightside:
 	ld	a, #DEVICE_LCD_RIGHT
 swap_lcd:
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	e, #FONT_WIDTH		; for (col = FONT_WIDTH; col > 0; col--)
 next_char_col:				; inner loop, each col of each row
 	ld	-14(ix), #0b00011111	; font data mask that will get shifted
@@ -556,10 +552,10 @@ read_lcd_data:
 	dec	d
 	jp	nz, next_char_row
 stamp_char_out:
-	ld	a, -3(ix)		; restore slot4000device
-	out	(#06), a
-	ld	a, -4(ix)		; restore slot4000page
-	out	(#05), a
+	ld	a, -3(ix)		; restore old slot device
+	out	(#SLOT_DEVICE), a
+	ld	a, -4(ix)		; restore old slot page
+	out	(#SLOT_PAGE), a
 	ld	hl, #15			; remove stack bytes
 	add	hl, sp
 	ld	sp, hl

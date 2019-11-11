@@ -45,22 +45,6 @@ __sfr __at(0x1b) rtcyears;
 __sfr __at(0x1c) rtc10years;
 __sfr __at(0x28) port28;
 
-/* v2.54 firmware */
-extern volatile unsigned char __at(0xdba2) p2shadow;
-extern volatile unsigned char __at(0xdba3) p3shadow;
-extern volatile unsigned char __at(0xdba0) p28shadow;
-
-/* device IDs that can be swapped into page4000 */
-#define DEVICE_CODEFLASH	0x00	// 64 pages
-#define DEVICE_RAM		0x01	// 08 pages
-#define DEVICE_LCD_LEFT		0x02	// 01 pages
-#define	DEVICE_DATAFLASH	0x03	// 32 pages
-#define DEVICE_LCD_RIGHT	0x04	// 01 pages
-#define DEVICE_MODEM		0x05	// 01 pages
-
-/* once DEVICE_LCD_{LEFT,RIGHT} is swapped into page4000, LCD starts here */
-#define LCD_START		0x4038
-
 /* LCD parameters (2 screens) */
 #define LCD_WIDTH		(160 * 2)	// 320
 #define LCD_HEIGHT		128

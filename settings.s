@@ -23,6 +23,9 @@
 
 	.include "mailstation.inc"
 
+	.equ	SDP_LOCK,	#SLOT_ADDR + 0x040a
+	.equ	SDP_UNLOCK,	#SLOT_ADDR + 0x041a
+
 	.equ	settings_ident_0,	'j'
 	.equ	settings_ident_1,	'c'
 	.equ	settings_ident_2,	's'
@@ -46,16 +49,16 @@ _settings_read::
 	push	bc
 	push	de
 	push	hl
-	in	a, (#06)		; store device and page
+	in	a, (#SLOT_DEVICE)	; store device and page
 	ld	h, a
-	in	a, (#05)
+	in	a, (#SLOT_PAGE)
 	ld	l, a
 	push	hl
 	ld	a, #DEVICE_DATAFLASH	; slot 4 device = dataflash
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	a, #settings_page
-	out	(#05), a
-	ld	hl, #0x4000 + (settings_sector * 256)
+	out	(#SLOT_PAGE), a
+	ld	hl, #SLOT_ADDR + (settings_sector * 256)
 	push	hl
 	ld	a, (hl)
 	cp	#settings_ident_0	; verify that the first 3 bytes are
@@ -78,43 +81,48 @@ skip_loading:
 	pop	hl
 	pop	hl
 	ld	a, h
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	a, l
-	out	(#05), a
+	out	(#SLOT_PAGE), a
 	pop	hl
 	pop	de
 	pop	bc
 	ret
+
+sdp:
+	ld	a, (#SLOT_ADDR + 0x1823) ; 28SF040 Software Data Protection
+	ld	a, (#SLOT_ADDR + 0x1820)
+	ld	a, (#SLOT_ADDR + 0x1822)
+	ld	a, (#SLOT_ADDR + 0x0418)
+	ld	a, (#SLOT_ADDR + 0x041b)
+	ld	a, (#SLOT_ADDR + 0x0419)
+	ret
+	; caller needs to read final SDP_LOCK or SDP_UNLOCK address
 
 ; void settings_write(void)
 _settings_write::
 	push	bc
 	push	de
 	push	hl
-	in	a, (#06)		; store device and page
+	in	a, (#SLOT_DEVICE)	; store device and page
 	ld	h, a
-	in	a, (#05)
+	in	a, (#SLOT_PAGE)
 	ld	l, a
 	push	hl
 	ld	a, #DEVICE_DATAFLASH	; slot 4 device = dataflash
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	xor	a
-	out	(#05), a		; slot 4 page = 0
-	ld	a, (#0x5823)		; Software Data Protection unprotect
-	ld	a, (#0x5820)
-	ld	a, (#0x5822)
-	ld	a, (#0x4418)
-	ld	a, (#0x441b)
-	ld	a, (#0x4419)
-	ld	a, (#0x441a)		; 041a=unlock 040a=lock
+	out	(#SLOT_PAGE), a		; slot 4 page = 0
+	call	sdp
+	ld	a, (#SDP_UNLOCK)
 	ld	a, #settings_page
-	out	(#05), a
-	ld	hl, #0x4000 + (settings_sector * 256)
+	out	(#SLOT_PAGE), a
+	ld	hl, #SLOT_ADDR + (settings_sector * 256)
 sector_erase:
-	ld	(hl), #0x20		; sector-erase
-	ld	(hl), #0xd0
+	ld	(hl), #0x20		; 28SF040 Sector-Erase Setup
+	ld	(hl), #0xd0		; 28SF040 Execute
 sector_erase_wait:
-	ld	a, (hl)
+	ld	a, (hl)			; wait until End-of-Write
 	ld	b, a
 	ld	a, (hl)
 	cp	b
@@ -125,32 +133,27 @@ dump_setting_bytes:
 byte_program_loop:
 	ld	a, (de)
 	ld	c, a
-	ld	(hl), #0x10		; byte-program setup
-	ld	(hl), c			; write new byte
+	ld	(hl), #0x10		; 28SF040 Byte-Program Setup
+	ld	(hl), a			; 28SF040 Execute
 byte_program:
 	ld	a, (hl)
 	ld	c, a
-	ld	a, (hl)			; end write by reading it
+	ld	a, (hl)			; End-of-Write by reading it
 	cp	c
 	jr	nz, byte_program	; read until writing succeeds
 	inc	hl
 	inc	de
 	djnz	byte_program_loop
 flash_lock:
-	xor	a			; slot 4 page = 0
-	out	(#05), a
-	ld	a, (#0x5823)		; Software Data Protection unprotect
-	ld	a, (#0x5820)
-	ld	a, (#0x5822)
-	ld	a, (#0x4418)
-	ld	a, (#0x441b)
-	ld	a, (#0x4419)
-	ld	a, (#0x440a)		; 041a=unlock 040a=lock
+	xor	a			; slot page = 0
+	out	(#SLOT_PAGE), a
+	call	sdp
+	ld	a, (#SDP_LOCK)
 	pop	hl
 	ld	a, h
-	out	(#06), a
+	out	(#SLOT_DEVICE), a
 	ld	a, l
-	out	(#05), a
+	out	(#SLOT_PAGE), a
 	pop	hl
 	pop	de
 	pop	bc

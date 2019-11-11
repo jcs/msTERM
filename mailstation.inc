@@ -1,5 +1,28 @@
 ; vim:syntax=z8a:ts=8:sw=8
 
+;	; when running from Loader, we are loaded at 0x8000 and use slot 4
+;	; for swapping devices
+;	;
+;	; the --code-loc parameter in Makefile should be 0x8100
+;	.equ	RUN_ADDR,		#0x8000
+;	.equ	RUN_DEVICE,		#0x8
+;	.equ	RUN_PAGE,		#0x7
+;	.equ	SLOT_ADDR,		#0x4000
+;	.equ	SLOT_DEVICE,		#0x6
+;	.equ	SLOT_PAGE,		#0x5
+
+	; when running from dataflash, we are loaded at 0x4000 and use slot 8
+	; for swapping devices
+	;
+	; the --code-loc parameter in Makefile should be 0x4100
+	.equ	RUN_ADDR,		#0x4000
+	.equ	RUN_DEVICE,		#0x6
+	.equ	RUN_PAGE,		#0x5
+	.equ	SLOT_ADDR,		#0x8000
+	.equ	SLOT_DEVICE,		#0x8
+	.equ	SLOT_PAGE,		#0x7
+
+
 	; for firmware v2.54
 	; variables
 	.equ	p2shadow,		#0xdba2
@@ -34,12 +57,14 @@
 	.equ	LCD_ROWS,		#LCD_HEIGHT / FONT_HEIGHT ; 16
 	.equ	TEXT_ROWS,		#LCD_ROWS - 1		  ; 15
 
+	.equ	DEVICE_RAM,		#0x01
 	.equ	DEVICE_LCD_LEFT,	#0x02
 	.equ	DEVICE_DATAFLASH,	#0x03
 	.equ	DEVICE_LCD_RIGHT,	#0x04
+	.equ	DEVICE_MODEM,		#0x05
 
-	; addressing the LCD once it's in slot4000_device
-	.equ	LCD_START,		#0x4038
+	; addressing the LCD once it's loaded in SLOT_ADDR
+	.equ	LCD_START,		#SLOT_ADDR + 0x0038
 
 	.equ	ATTR_BIT_CURSOR,	#0
 	.equ	ATTR_BIT_REVERSE,	#1
@@ -68,6 +93,7 @@
 	.globl	_delay
 	.globl	_lptsend
 	.globl	_lptsend16
+	.globl	_lptrecv
 	.globl	div16
 	.globl	mult8
 	.globl	mult16
