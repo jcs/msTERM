@@ -22,14 +22,6 @@
 
 #include "mailstation.h"
 
-extern volatile unsigned char mem0;
-
-volatile unsigned char __at(0xf500) obuf[];
-volatile unsigned char __at(0xf704) obuf_pos;
-volatile unsigned char __at(0xf600) modem_buf[];
-volatile unsigned char __at(0xf700) modem_buf_pos;
-volatile unsigned char __at(0xf702) modem_buf_read_pos;
-
 unsigned char lastkey;
 unsigned char esc;
 unsigned char old_modem_msr;
@@ -53,16 +45,17 @@ unsigned char source;
 #define STATUSBAR_HANGUP	"    Hangup   "
 #define STATUSBAR_BLANK		"             "
 #define STATUSBAR_SETTINGS	"  Settings   "
+#define STATUSBAR_PAUSE		"    Pause    "
+#define STATUSBAR_CONTINUE	"  Continue   "
 unsigned char statusbar_state;
 unsigned char statusbar_time[16];
 
 void
 obuf_queue(unsigned char *c)
 {
-	unsigned char l = strlen(c);
-	unsigned char x;
+	unsigned char l, x;
 
-	for (x = 0; x < strlen(c); x++)
+	for (x = 0, l = strlen(c); x < l; x++)
 		obuf[obuf_pos++] = c[x];
 }
 
@@ -75,7 +68,7 @@ int main(void)
 restart:
 	lastkey = 0;
 	esc = 0;
-	source = SOURCE_MODEM; //LPT;
+	source = SOURCE_MODEM; // SOURCE_LPT;
 	putchar_sgr = 0;
 	in_csi = 0;
 	csibuflen = 0;
@@ -85,9 +78,9 @@ restart:
 	old_minutes = 0;
 	debug0 = 0;
 
-	clear_screen();
 	settings_read();
 
+	clear_screen();
 	maybe_update_statusbar(1);
 
 	if (source == SOURCE_MODEM) {

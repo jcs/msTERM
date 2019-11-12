@@ -37,10 +37,13 @@
 	.equ	lcd_buf,		#0xc010
 	.equ	lcd_buf_end,		#0xc010 + ((LCD_WIDTH * LCD_HEIGHT) / 8) - 1
 
-	; circular char[] buffer offset by *modem_buf_pos
-	.equ	modem_buf,		#0xf600
-	.equ	modem_buf_pos,		#0xf700
-	.equ	modem_buf_read_pos,	#0xf702
+	; circular char[] buffer offset by *_modem_buf_pos
+	.equ	_modem_buf,		#0xf600
+	.equ	_modem_buf_pos,		#0xf700
+	.equ	_modem_buf_read_pos,	#0xf702
+
+	.equ	_obuf,			#0xf500
+	.equ	_obuf_pos,		#0xf704
 
 	; some random dataflash location (0x18000) that looked empty
 	.equ	settings_page,		#6
@@ -78,12 +81,24 @@
 
 	.equ	MODEM_DEFAULT_SPEED,	#300
 
+	.equ	_mem0,			#0
+	.globl	_mem0
+
 	.globl	_saved_cursorx
 	.globl	_saved_cursory
 
 	; settings
 	.globl	_setting_modem_speed
 	.globl	_setting_modem_quiet
+
+	.globl	_modem_buf
+	.globl	_modem_buf_pos
+	.globl	_modem_buf_read_pos
+	.globl	_modem_curmsr
+	.globl	_modem_flowing
+
+	.globl	_obuf
+	.globl	_obuf_pos
 
 	; debug variables
 	.globl	_debug0

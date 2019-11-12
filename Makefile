@@ -33,13 +33,10 @@ clean:
 crt0.rel: crt0.s
 	$(ASZ80) -o ${.TARGET} $>
 
-isr.rel: isr.s
+getchar.rel: getchar.s
 	$(ASZ80) -o ${.TARGET} $>
 
-putchar.rel: putchar.s $(SRCDIR)/font/spleen-5x8.inc
-	$(ASZ80) -o ${.TARGET} $(SRCDIR)/putchar.s
-
-getchar.rel: getchar.s
+isr.rel: isr.s
 	$(ASZ80) -o ${.TARGET} $>
 
 lpt.rel: lpt.s
@@ -48,16 +45,18 @@ lpt.rel: lpt.s
 modem.rel: modem.s
 	$(ASZ80) -o ${.TARGET} $>
 
+putchar.rel: putchar.s $(SRCDIR)/font/spleen-5x8.inc
+	$(ASZ80) -o ${.TARGET} $(SRCDIR)/putchar.s
+
 settings.rel: settings.s
 	$(ASZ80) -o ${.TARGET} $>
 
-# c code
-
+#csi.rel: csi.s
+#	$(ASZ80) -o ${.TARGET} $>
 csi.rel: csi.c
 	$(SDCC) -c ${.TARGET} $>
 
-mailstation.rel: mailstation.c
-	$(SDCC) -c ${.TARGET} $>
+# c code
 
 mslib.rel: mslib.c
 	$(SDCC) -c ${.TARGET} $>
@@ -71,8 +70,8 @@ font/spleen-5x8.inc: font/spleen-5x8.hex
 	ruby $(SRCDIR)/tools/hexfont2inc.rb $> > $(SRCDIR)/${.TARGET}
 
 # code-loc must be far enough to hold _HEADER code in crt0
-msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel mailstation.rel \
-modem.rel msterm.rel mslib.rel csi.rel settings.rel
+msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
+msterm.rel mslib.rel csi.rel settings.rel
 	$(SDCC) --no-std-crt0 --code-loc 0x4100 --data-loc 0x0000 -o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
