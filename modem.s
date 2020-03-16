@@ -29,6 +29,8 @@
 	; modem msr
 _modem_curmsr::
 	.db	#0
+_modem_flowing::
+	.db	#0
 
 	.area	_CODE
 
@@ -63,12 +65,12 @@ modem_read_loop:
 	call	_modem_read
 	ld	b, l
 	pop	hl
-	ld	hl, #modem_buf
-	ld	a, (modem_buf_pos)
+	ld	hl, #_modem_buf
+	ld	a, (_modem_buf_pos)
 	ld	l, a			; 0xf600 + (modembufpos)
 	ld	(hl), b
 	inc	a
-	ld	(modem_buf_pos), a
+	ld	(_modem_buf_pos), a
 	djnz	check_for_more_bytes
 	jr	modem_isr_out
 check_for_more_bytes:
@@ -91,7 +93,7 @@ _modem_init::
 	push	bc
 	push	hl
 	ld	a, #0
-	ld	(modem_buf_pos), a
+	ld	(_modem_buf_pos), a
 	call	0x3dbe			; disable caller id?
 	ld	a, (p3shadow)
 	res	7, a			; disable caller id interrupt

@@ -80,6 +80,9 @@
 	.equ	ATTR_UNDERLINE,		#(1 << ATTR_UNDERLINE)
 
 	.equ	MODEM_DEFAULT_SPEED,	#300
+	.equ	ESC,			#0x1b
+	.equ	XON,			#0x11
+	.equ	XOFF,			#0x13
 
 	.equ	_mem0,			#0
 	.globl	_mem0
