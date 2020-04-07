@@ -39,9 +39,6 @@ _modem_isr::
 	push	hl
 	push	bc
 	ld	l, #1
-	push	hl
-	call	_new_mail
-	pop	hl
 	call	_modem_iir		; read IIR to identify interrupt
 	bit	#0, l
 	jr	nz, modem_isr_out	; no interrupt, how did we get here?
@@ -61,6 +58,7 @@ no_rls:
 	jr	z, modem_isr_out
 	ld	b, #16			; read 16 bytes at a time
 modem_read_loop:
+	push	bc
 	push	hl
 	call	_modem_read
 	ld	b, l
@@ -71,6 +69,7 @@ modem_read_loop:
 	ld	(hl), b
 	inc	a
 	ld	(_modem_buf_pos), a
+	pop	bc
 	djnz	check_for_more_bytes
 	jr	modem_isr_out
 check_for_more_bytes:
@@ -259,6 +258,10 @@ set_dlab:
 ; return a byte in hl from the modem FIFO, from 0x3328 in v2.54 firmware
 _modem_read::
 	; use	hl
+	ld	hl, #1
+	push	hl
+	call	_new_mail
+	pop	hl
 	in	a, (#SLOT_ADDR)		; save old slot device
 	ld	h, a			; into h
 	ld	a, #DEVICE_MODEM
@@ -268,6 +271,12 @@ _modem_read::
 	ld	a, h
 	out	(#SLOT_DEVICE), a	; set old slot device
 	ld	h, #0x00
+	push	hl
+	ld	hl, #0
+	push	hl
+	call	_new_mail
+	pop	hl
+	pop	hl
 	ret				; return hl
 
 
@@ -278,6 +287,10 @@ _modem_write::
 	ld	ix, #0
 	add	ix, sp
 	push	hl
+	ld	hl, #1
+	push	hl
+	call	_new_mail
+	pop	hl
 	ld	a, 4(ix)
 	ld	l, a
 	in	a, (#SLOT_DEVICE)
@@ -288,6 +301,10 @@ _modem_write::
 	ld	(#SLOT_ADDR), a
 	ld	a, h
 	out	(#SLOT_DEVICE), a
+	ld	hl, #0
+	push	hl
+	call	_new_mail
+	pop	hl
 	pop	hl
 	pop	ix
 	ret
