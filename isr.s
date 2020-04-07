@@ -102,7 +102,7 @@ isr_7:
 	out	(0x3), a		; reset interrupt
 	ld	a, (p3shadow)
 	out	(0x3), a		; set mask back to p3shadow
-	call	0x3b19			; default handler
+	call	0x3b19			; default power button handler
 	jp	isrout
 isr_6:
 	ld	a, (p3shadow)
