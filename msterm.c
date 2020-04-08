@@ -101,7 +101,7 @@ restart:
 		/* Select modulation - V.34, automode, min_rate */
 		obuf_queue("+MS=11,1,300,");
 		/* max_rate */
-		sprintf(ms, "%u", setting_modem_speed);
+		itoa(setting_modem_speed, ms, 10);
 		obuf_queue(ms);
 		/* Turn speaker off */
 		obuf_queue("M0");

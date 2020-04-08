@@ -24,20 +24,21 @@
 void
 uitoa(unsigned int value, char *string, int radix)
 {
+	unsigned char t[NUMBER_OF_DIGITS + 1];
 	unsigned char index, i;
 
 	index = NUMBER_OF_DIGITS;
 	i = 0;
 
 	do {
-		string[--index] = '0' + (value % radix);
-		if (string[index] > '9')
-			string[index] += 'A' - ':';
+		t[--index] = '0' + (value % radix);
+		if (t[index] > '9')
+			t[index] += 'A' - ':';
 		value /= radix;
 	} while (value != 0);
 
 	do {
-		string[i++] = string[index++];
+		string[i++] = t[index++];
 	} while (index < NUMBER_OF_DIGITS);
 
 	string[i] = '\0';
