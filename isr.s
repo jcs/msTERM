@@ -67,7 +67,7 @@ patch_isr::
 
 	xor	a			; clear interrupt mask
 	set	7, a			; allow interrupt 7 for power button
-	set	6, a			; 6 for modem
+	;set	6, a			; 6 for modem
 	;set	5, a			; 5 for RTC
 	set	2, a			; 2 for keyboard
 	set	1, a			; 1 for keyboard

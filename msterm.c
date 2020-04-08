@@ -53,9 +53,9 @@ unsigned char statusbar_time[16];
 void
 obuf_queue(unsigned char *c)
 {
-	unsigned char l, x;
+	unsigned char x;
 
-	for (x = 0, l = strlen(c); x < l; x++)
+	for (x = 0; c[x] != '\0'; x++)
 		obuf[obuf_pos++] = c[x];
 }
 
@@ -63,6 +63,7 @@ int main(void)
 {
 	unsigned char *memp = &mem0;
 	unsigned char old_obuf_pos;
+	unsigned char ms[10];
 	unsigned int b;
 
 restart:
@@ -79,7 +80,6 @@ restart:
 	debug0 = 0;
 
 	settings_read();
-
 	clear_screen();
 	maybe_update_statusbar(1);
 
@@ -87,39 +87,50 @@ restart:
 		printf("powering up modem (%u bps)...", setting_modem_speed);
 		modem_init();
 		putchar('\n');
-		obuf_queue("AT&F0+MS=11,1,300,14400M0Q0L0&K5\r");
-		modem_buf_read_pos = modem_buf_pos;
+
+		/* Restore factory configuration 0 */
+		obuf_queue("AT&F0");
+		/* Select modulation - V.34, automode, min_rate */
+		obuf_queue("+MS=11,1,300,");
+		/* max_rate */
+		sprintf(ms, "%u", setting_modem_speed);
+		obuf_queue(ms);
+		/* Turn speaker off */
+		obuf_queue("M0");
+		/* Allow result codes to DTE */
+		obuf_queue("Q0");
+		/* Set low speaker volume */
+		obuf_queue("L0");
+		/* Enable transparent XON/XOFF flow control */
+		obuf_queue("&K5\r");
 	}
 
 	for (;;) {
 		process_keyboard();
 
-		if (source == SOURCE_MODEM) {
-			while (modem_buf_read_pos != modem_buf_pos) {
-				process_input(modem_buf[modem_buf_read_pos]);
-				modem_buf_read_pos++;
-			}
-		} else if (source == SOURCE_LPT) {
+		switch (source) {
+		case SOURCE_MODEM:
+			if (modem_lsr() & (1 << 0))
+				process_input(modem_read());
+			break;
+		case SOURCE_LPT:
 			b = lptrecv();
 			if (b <= 0xff)
 				process_input(b & 0xff);
+			break;
 		}
 
-		while (old_obuf_pos != obuf_pos) {
-			if (source == SOURCE_MODEM) {
-				b = modem_lsr();
-				if (b & (1 << 5))
-					/* Transmitter Holding Register Empty (THRE) */
-					modem_write(obuf[old_obuf_pos]);
-				else
-					continue;
-			} else if (source == SOURCE_LPT) {
-				lptsend(obuf[old_obuf_pos]);
-			} else {
-				putchar(obuf[old_obuf_pos]);
+		if (old_obuf_pos != obuf_pos) {
+			switch (source) {
+			case SOURCE_MODEM:
+				if (modem_lsr() & (1 << 5))
+					/* Transmitter Holding Register Empty */
+					modem_write(obuf[old_obuf_pos++]);
+				break;
+			case SOURCE_LPT:
+				lptsend(obuf[old_obuf_pos++]);
+				break;
 			}
-
-			old_obuf_pos++;
 		}
 
 		maybe_update_statusbar(0);
@@ -211,11 +222,8 @@ process_keyboard(void)
 		__endasm;
 		break;
 	case KEY_F1:
-		if (modem_curmsr & MODEM_MSR_DCD) {
-			/* hangup, send break */
-			//modem_hangup();
-			obuf_queue("+++ATH0\r");
-		}
+		if (modem_curmsr & MODEM_MSR_DCD)
+			modem_hangup();
 		break;
 	case KEY_MAIN_MENU:
 		/* send escape */
