@@ -36,11 +36,12 @@ which will put the application into `0x8000`.
 Edit `Makefile` to change the `--code-loc` argument to `sdcc` to expect to run
 from the `0x4000` area, as well as the `.org` line in `crt0.s`.
 
-Load the compiled `obj/msterm.bin` to the `dataflash`... somehow.
+Load the compiled `obj/msterm.bin` to the `dataflash` with
+[dataflashloader.asm](https://github.com/jcs/mailstation-tools/blob/master/dataflashloader.asm).
 
 ### License
 
-Copyright (c) 2019 [joshua stein](https://jcs.org/)
+Copyright (c) 2019-2020 [joshua stein](https://jcs.org/)
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
