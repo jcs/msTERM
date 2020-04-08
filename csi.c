@@ -38,7 +38,7 @@ parseCSI(void)
 	int param1 = -1, param2 = -1;
 	char c = csibuf[csibuflen - 1];
 	char parambuf[4];
-	int parambuflen, off;
+	int parambuflen;
 #ifdef DEBUG
 	char sb[TEXT_COLS];
 #endif
@@ -249,9 +249,7 @@ parseCSI(void)
 	case 'm': /* graphic changes */
 		parambuf[0] = '\0';
 		parambuflen = 0;
-
-		off = (cursory * LCD_COLS) + cursorx;
-		param2 = screenattrs[off];
+		param2 = putchar_sgr;
 
 		for (x = 0; x < csibuflen; x++) {
 			/* all the way to csibuflen to catch 'm' */
