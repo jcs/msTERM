@@ -80,6 +80,7 @@ restart:
 	debug0 = 0;
 
 	settings_read();
+	clear_screen_bufs();
 	clear_screen();
 
 	maybe_update_statusbar(1);

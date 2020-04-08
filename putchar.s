@@ -83,16 +83,14 @@ _lcd_cas::
 ; void clear_screen(void)
 _clear_screen::
 	di
-	push	bc
-	push	de
 	push	hl
  	in	a, (#SLOT_DEVICE)
  	ld	h, a
  	in	a, (#SLOT_PAGE)
  	ld	l, a
+	push	hl
 	ld	a, #DEVICE_LCD_RIGHT
 	out	(#SLOT_DEVICE), a
-	push	hl
 	call	_clear_lcd_half
 	ld	a, #DEVICE_LCD_LEFT
 	out	(#SLOT_DEVICE), a
@@ -102,7 +100,15 @@ _clear_screen::
 	out	(#SLOT_DEVICE), a
 	ld	a, l
 	out	(#SLOT_PAGE), a
-reset_cursor:
+	pop	hl
+	ei
+	ret
+
+_clear_screen_bufs::
+	di
+	push	bc
+	push	de
+	push	hl
 	xor	a
 	ld	(_cursorx), a
 	ld	(_cursory), a

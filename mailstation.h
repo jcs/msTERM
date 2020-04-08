@@ -130,6 +130,7 @@ extern void lcd_wake(void);
 extern void uncursor(void);
 extern void recursor(void);
 extern void clear_screen(void);
+extern void clear_screen_bufs(void);
 extern void redraw_screen(void);
 extern void scroll_lcd_half(void);
 extern void clear_lcd_half(void);
