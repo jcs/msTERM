@@ -1,5 +1,7 @@
 ; vim:syntax=z8a:ts=8:sw=8
 
+	.equ	VERSION,		#0x3
+
 ;	; when running from Loader, we are loaded at 0x8000 and use slot 4
 ;	; for swapping devices
 ;	;

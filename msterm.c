@@ -81,12 +81,20 @@ restart:
 
 	settings_read();
 	clear_screen();
+
 	maybe_update_statusbar(1);
 
+	printf("\n"
+	    "                            ________________  __  ___\n"
+	    "             ____ ___  ____/_  __/ ____/ __ \\/  |/  /\n"
+	    "            / __ `__ \\/ ___// / / __/ / /_/ / /|_/ /\n"
+	    "           / / / / / (__  )/ / / /___/ _, _/ /  / /\n"
+	    "          /_/ /_/ /_/____//_/ /_____/_/ |_/_/  /_/  ver %u\n"
+	    "\n",
+	    msTERM_version);
+
 	if (source == SOURCE_MODEM) {
-		printf("powering up modem (%u bps)...", setting_modem_speed);
 		modem_init();
-		putchar('\n');
 
 		/* Restore factory configuration 0 */
 		obuf_queue("AT&F0");

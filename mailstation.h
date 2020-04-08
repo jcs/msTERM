@@ -94,6 +94,7 @@ extern unsigned char debug4;
 
 
 /* crt0.s */
+extern unsigned char msTERM_version;
 extern void exit(void);
 extern void powerdown_mode(void);
 extern void new_mail(unsigned char on);

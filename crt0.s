@@ -146,6 +146,8 @@ _debug3::
 	.db	#0
 _debug4::
 	.db	#0
+_msTERM_version::
+	.db	#VERSION
 
 	.area	_DATA
 
