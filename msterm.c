@@ -38,6 +38,7 @@ void maybe_update_statusbar(unsigned char force);
 enum {
 	SOURCE_MODEM,
 	SOURCE_LPT,
+	SOURCE_ECHO,
 };
 unsigned char source;
 
@@ -138,6 +139,9 @@ restart:
 				break;
 			case SOURCE_LPT:
 				lptsend(obuf[old_obuf_pos++]);
+				break;
+			case SOURCE_ECHO:
+				putchar(obuf[old_obuf_pos++]);
 				break;
 			}
 		}
