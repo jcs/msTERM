@@ -35,9 +35,9 @@
 	.equ	get_keycode_from_buffer,#0x0a9a
 	.equ	lcd_buf_to_screen,	#0x2473
 
-	; buffers
+	; lcd bit storage buffer, copied with lcd_buf_to_screen
 	.equ	lcd_buf,		#0xc010
-	.equ	lcd_buf_end,		#0xc010 + ((LCD_WIDTH * LCD_HEIGHT) / 8) - 1
+	.equ	lcd_buf_end,		#lcd_buf + ((LCD_WIDTH * LCD_HEIGHT) / 8) - 1
 
 	; circular char[] buffer offset by *_modem_buf_pos
 	.equ	_modem_buf,		#0xf600
