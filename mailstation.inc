@@ -2,10 +2,10 @@
 
 	.equ	VERSION,		#0x3
 
-;	; when running from Loader, we are loaded at 0x8000 and use slot 4
-;	; for swapping devices
-;	;
-;	; the --code-loc parameter in Makefile should be 0x8100
+	; when running from Loader, we are loaded at 0x8000 and use slot 4
+	; for swapping devices
+	;
+	; CODE_LOC in Makefile should be 0x8100
 ;	.equ	RUN_ADDR,		#0x8000
 ;	.equ	RUN_DEVICE,		#0x8
 ;	.equ	RUN_PAGE,		#0x7
@@ -16,7 +16,7 @@
 	; when running from dataflash, we are loaded at 0x4000 and use slot 8
 	; for swapping devices
 	;
-	; the --code-loc parameter in Makefile should be 0x4100
+	; CODE_LOC in Makefile should be 0x4100
 	.equ	RUN_ADDR,		#0x4000
 	.equ	RUN_DEVICE,		#0x6
 	.equ	RUN_PAGE,		#0x5

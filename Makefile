@@ -23,6 +23,11 @@ SRCDIR	?= ${.CURDIR}
 
 OBJ	?= obj/
 
+# when loading from loader (memory), use 0x8100
+# when loading from dataflash, use 0x4100
+# must be far enough to hold _HEADER code in crt0
+CODE_LOC?= 0x4100
+
 all: msterm.bin
 
 clean:
@@ -69,10 +74,9 @@ msterm.rel: msterm.c
 font/spleen-5x8.inc: font/spleen-5x8.hex
 	ruby $(SRCDIR)/tools/hexfont2inc.rb $> > $(SRCDIR)/${.TARGET}
 
-# code-loc must be far enough to hold _HEADER code in crt0
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
 msterm.rel mslib.rel csi.rel settings.rel
-	$(SDCC) --no-std-crt0 --code-loc 0x4100 --data-loc 0x0000 -o ${.TARGET} $>
+	$(SDCC) --no-std-crt0 --code-loc ${CODE_LOC} --data-loc 0x0000 -o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
 	objcopy -Iihex -Obinary $> $@
