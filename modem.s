@@ -378,6 +378,7 @@ _modem_msr::
 	ld	a, #DEVICE_MODEM
 	out	(#SLOT_DEVICE), a
 	ld	a, (#SLOT_ADDR + 0x6)	; read modem MSR
+	ld	(_modem_curmsr), a
 	ld	l, a
 	ld	a, h
 	out	(#SLOT_DEVICE), a

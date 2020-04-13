@@ -166,6 +166,7 @@ extern int modem_ier(void);
 extern int modem_iir(void);
 extern int modem_lcr(void);
 extern int modem_lsr(void);
+extern int modem_msr(void);
 extern char modem_read(void);
 extern void modem_write(char c);
 extern void modem_hangup(void);

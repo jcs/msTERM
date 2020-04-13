@@ -70,7 +70,7 @@ int main(void)
 restart:
 	lastkey = 0;
 	esc = 0;
-	source = SOURCE_MODEM; // SOURCE_LPT;
+	source = SOURCE_MODEM;
 	putchar_sgr = 0;
 	in_csi = 0;
 	csibuflen = 0;
@@ -120,6 +120,7 @@ restart:
 
 		switch (source) {
 		case SOURCE_MODEM:
+			modem_msr();
 			if (modem_lsr() & (1 << 0))
 				process_input(modem_read());
 			break;
