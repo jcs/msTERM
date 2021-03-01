@@ -16,17 +16,30 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-ASZ80	?= sdasz80 -l -ff
-SDCC	?= sdcc -mz80
+ASZ80?=		sdasz80 -l -ff
+SDCC?=		sdcc -mz80
 
-SRCDIR	?= ${.CURDIR}
+SRCDIR?=	${.CURDIR}
 
-OBJ	?= obj/
+OBJ?=		obj/
 
-# when loading from loader (memory), use 0x8100
-# when loading from dataflash, use 0x4100
-# must be far enough to hold _HEADER code in crt0
-CODE_LOC?= 0x4100
+# either "flash" or "ram"
+LOC?=		ram
+
+.if ${LOC:L} == "flash"
+BASE_ADDR=	0x4000
+.elif ${LOC:L} == "ram"
+BASE_ADDR=	0x8000
+.else
+.BEGIN:
+	@echo 'LOC must be "flash" or "ram"'
+	@exit 1
+.endif
+
+# added to $BASE_ADDR, must be far enough to hold _HEADER code in crt0
+CODE_OFF=	0x100
+
+ADDRS_INC=	${SRCDIR}/addrs-${LOC}.inc
 
 all: msterm.bin
 
@@ -36,25 +49,25 @@ clean:
 # assembly
 
 crt0.rel: crt0.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 getchar.rel: getchar.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 isr.rel: isr.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 lpt.rel: lpt.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 modem.rel: modem.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 putchar.rel: putchar.s $(SRCDIR)/font/spleen-5x8.inc
-	$(ASZ80) -o ${.TARGET} $(SRCDIR)/putchar.s
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $(SRCDIR)/putchar.s
 
 settings.rel: settings.s
-	$(ASZ80) -o ${.TARGET} $>
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
 #csi.rel: csi.s
 #	$(ASZ80) -o ${.TARGET} $>
@@ -76,7 +89,9 @@ font/spleen-5x8.inc: font/spleen-5x8.hex
 
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
 msterm.rel mslib.rel csi.rel settings.rel
-	$(SDCC) --no-std-crt0 --code-loc ${CODE_LOC} --data-loc 0x0000 -o ${.TARGET} $>
+	$(SDCC) --no-std-crt0 \
+		--code-loc `perl -e 'print ${BASE_ADDR} + ${CODE_OFF}'` \
+		--data-loc 0x0000 -o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
 	objcopy -Iihex -Obinary $> $@

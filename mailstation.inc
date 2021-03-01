@@ -2,28 +2,14 @@
 
 	.equ	VERSION,		#0x3
 
-	; when running from Loader, we are loaded at 0x8000 and use slot 4
-	; for swapping devices
-	;
-	; CODE_LOC in Makefile should be 0x8100
-;	.equ	RUN_ADDR,		#0x8000
-;	.equ	RUN_DEVICE,		#0x8
-;	.equ	RUN_PAGE,		#0x7
-;	.equ	SLOT_ADDR,		#0x4000
-;	.equ	SLOT_DEVICE,		#0x6
-;	.equ	SLOT_PAGE,		#0x5
-
-	; when running from dataflash, we are loaded at 0x4000 and use slot 8
-	; for swapping devices
-	;
-	; CODE_LOC in Makefile should be 0x4100
-	.equ	RUN_ADDR,		#0x4000
-	.equ	RUN_DEVICE,		#0x6
-	.equ	RUN_PAGE,		#0x5
-	.equ	SLOT_ADDR,		#0x8000
-	.equ	SLOT_DEVICE,		#0x8
-	.equ	SLOT_PAGE,		#0x7
-
+	; these are defined in addrs-*, either of which is linked into the
+	; build based on where we're running from
+	.globl	RUN_ADDR
+	.globl	RUN_DEVICE
+	.globl	RUN_PAGE
+	.globl	SLOT_ADDR
+	.globl	SLOT_DEVICE
+	.globl	SLOT_PAGE
 
 	; for firmware v2.54
 	; variables
