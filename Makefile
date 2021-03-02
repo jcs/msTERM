@@ -17,7 +17,7 @@
 #
 
 ASZ80?=		sdasz80 -l -ff
-SDCC?=		sdcc -mz80
+SDCC?=		sdcc -mz80 --opt-code-size
 
 SRCDIR?=	${.CURDIR}
 
@@ -39,7 +39,9 @@ BASE_ADDR=	0x8000
 # added to $BASE_ADDR, must be far enough to hold _HEADER code in crt0
 CODE_OFF=	0x100
 
-ADDRS_INC=	${SRCDIR}/addrs-${LOC}.inc
+# subtracted from the end of the flash/ram page to hold data
+DATA_SIZE=	4800
+
 
 all: msterm.bin
 
@@ -47,6 +49,8 @@ clean:
 	rm -f *.{map,bin,ihx,lst,rel,sym,lk,noi}
 
 # assembly
+
+ADDRS_INC=	${SRCDIR}/addrs-${LOC}.inc
 
 crt0.rel: crt0.s
 	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
@@ -90,18 +94,20 @@ font/spleen-5x8.inc: font/spleen-5x8.hex
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
 msterm.rel mslib.rel csi.rel settings.rel
 	$(SDCC) --no-std-crt0 \
-		--code-loc `perl -e 'print ${BASE_ADDR} + ${CODE_OFF}'` \
-		--data-loc 0x0000 -o ${.TARGET} $>
+		--code-loc `ruby -e 'print ${BASE_ADDR} + ${CODE_OFF}'` \
+		--data-loc `ruby -e 'print ${BASE_ADDR} + 0x4000 - ${DATA_SIZE}'` \
+		-o ${.TARGET} $>
 
 msterm.bin: msterm.ihx
 	objcopy -Iihex -Obinary $> $@
 	@if [ `stat -f '%z' ${.TARGET}` -gt 16384 ]; then \
-		echo "${.TARGET} overflows a dataflash page, must be <= 16384"; \
+		ls -l ${.TARGET}; \
+		echo "${.TARGET} overflows a ${LOC} page, must be <= 16384; increase DATA_SIZE"; \
 		exit 1; \
 	fi
 
 disasm: msterm.bin
-	z80dasm -al -g 0x4000 $> > msterm.dasm
+	z80dasm -al -g ${BASE_ADDR} $> > msterm.dasm
 
 upload: all
 	sudo ../../mailstation-tools/obj/sendload -p 0x4000 msterm.bin

@@ -23,7 +23,8 @@
 	.include "mailstation.inc"
 	.globl	_modem_isr
 
-	.area   _CODE
+	.equ	isrjump,	#0xf7
+	.equ	isrjumptable,	#0xf800
 
 	; we're going to put 0xf7 at 0xf800 - 0xf8ff and then put 0xf8 in the
 	; 'i' register.  when an interrupt happens in interrupt mode 2, some
@@ -32,8 +33,7 @@
 	; 0xf7f7, and then jump to 0xf7f7, which we contain our own code,
 	; which will just be a 'jp isr' to our real ISR
 
-	.equ	isrjump,	#0xf7
-	.equ	isrjumptable,	#0xf800
+	.area   _CODE
 
 patch_isr::
 	di

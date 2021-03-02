@@ -24,7 +24,7 @@
 	.include "mailstation.inc"
 	.globl	_new_mail
 
-	.area	_DATA
+	.area	_BSS
 
 	; modem msr
 _modem_curmsr::

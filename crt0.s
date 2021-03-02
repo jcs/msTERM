@@ -102,6 +102,10 @@ boot:
 	xor	a
 	out	(#0x0d), a		; put the cpu in its highest speed
 
+	; all of our code expects to run in ram so when we're running from
+	; dataflash, we have to copy our page of flash into ram, then jump to
+	; it
+
 	; swap in a page of ram
 	ld	a, #DEVICE_RAM
 	out	(#SLOT_DEVICE), a
@@ -128,10 +132,10 @@ lojump:
 	call	_main			; main c code
 	jp	_exit
 
-	; ordering of segments for the linker
-	.area	_HOME
+	.area	_DATA
 
-	.area	_CODE
+_msTERM_version::
+	.db	#VERSION
 
 	; variables
         .area   _BSS
@@ -146,12 +150,6 @@ _debug3::
 	.db	#0
 _debug4::
 	.db	#0
-_msTERM_version::
-	.db	#VERSION
-
-	.area	_DATA
-
-        .area   _HEAP
 
         .area   _CODE
 
