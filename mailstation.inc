@@ -72,11 +72,9 @@
 	.equ	XON,			#0x11
 	.equ	XOFF,			#0x13
 
-	.equ	_mem0,			#0
-	.globl	_mem0
-
 	.globl	_saved_cursorx
 	.globl	_saved_cursory
+	.globl	_delay
 
 	; settings
 	.globl	_setting_modem_speed
@@ -94,12 +92,3 @@
 	; debug variables
 	.globl	_debug0
 	.globl	_debug1
-
-	; some commonly used functions
-	.globl	_delay
-	.globl	_lptsend
-	.globl	_lptsend16
-	.globl	_lptrecv
-	.globl	div16
-	.globl	mult8
-	.globl	mult16

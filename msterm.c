@@ -63,7 +63,6 @@ obuf_queue(unsigned char *c)
 
 int main(void)
 {
-	unsigned char *memp = &mem0;
 	unsigned char old_obuf_pos;
 	unsigned char ms[10];
 	unsigned int b, j;
