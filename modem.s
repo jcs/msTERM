@@ -132,9 +132,9 @@ _modem_init::
 	pop	hl
 	ld	a, #0x01
 	out	(#0x26), a		; turn port 26 on
-	ld	hl, #3000
+	ld	hl, #2000
 	push	hl
-	call	_delay			; delay 3 seconds
+	call	_delay			; delay 2 seconds
 	pop	hl
 	ld	a, #DEVICE_MODEM
 	out	(#SLOT_DEVICE), a	; switch slot device to modem
