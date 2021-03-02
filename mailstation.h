@@ -185,4 +185,10 @@ extern volatile unsigned char setting_modem_quiet;
 extern void settings_read(void);
 extern void settings_write(void);
 
+
+/* wifi.s */
+void wifi_init(void);
+extern int wifi_write(char);
+extern int wifi_read(void);
+
 #endif

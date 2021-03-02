@@ -40,6 +40,7 @@ enum {
 	SOURCE_MODEM,
 	SOURCE_LPT,
 	SOURCE_ECHO,
+	SOURCE_WIFI,
 };
 unsigned char source;
 
@@ -70,7 +71,7 @@ int main(void)
 restart:
 	lastkey = 0;
 	esc = 0;
-	source = SOURCE_MODEM;
+	source = SOURCE_WIFI;
 	putchar_sgr = 0;
 	in_csi = 0;
 	csibuflen = 0;
@@ -99,7 +100,8 @@ restart:
 
 	printf("  v%u\n\n", msTERM_version);
 
-	if (source == SOURCE_MODEM) {
+	switch (source) {
+	case SOURCE_MODEM:
 		modem_init();
 
 		/* Restore factory configuration 0 */
@@ -117,6 +119,11 @@ restart:
 		obuf_queue("L0");
 		/* Enable transparent XON/XOFF flow control */
 		obuf_queue("&K5\r");
+		break;
+	case SOURCE_WIFI:
+		wifi_init();
+		obuf_queue("AT\r\n");
+		break;
 	}
 
 	for (;;) {
@@ -133,6 +140,11 @@ restart:
 			if (b <= 0xff)
 				process_input(b & 0xff);
 			break;
+		case SOURCE_WIFI:
+			b = wifi_read();
+			if (b != -1)
+				process_input(b & 0xff);
+			break;
 		}
 
 		if (old_obuf_pos != obuf_pos) {
@@ -147,6 +159,9 @@ restart:
 				break;
 			case SOURCE_ECHO:
 				putchar(obuf[old_obuf_pos++]);
+				break;
+			case SOURCE_WIFI:
+				wifi_write(obuf[old_obuf_pos++]);
 				break;
 			}
 		}

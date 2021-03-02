@@ -73,6 +73,9 @@ putchar.rel: putchar.s $(SRCDIR)/font/spleen-5x8.inc
 settings.rel: settings.s
 	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
+wifi.rel: wifi.s
+	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
+
 #csi.rel: csi.s
 #	$(ASZ80) -o ${.TARGET} $>
 csi.rel: csi.c
@@ -95,7 +98,7 @@ font/spleen-5x8.inc: font/spleen-5x8.hex
 	ruby $(SRCDIR)/tools/hexfont2inc.rb $> > $(SRCDIR)/${.TARGET}
 
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
-msterm.rel mslib.rel csi.rel settings.rel
+msterm.rel mslib.rel csi.rel settings.rel wifi.rel
 	$(SDCC) --no-std-crt0 \
 		--code-loc `ruby -e 'print ${BASE_ADDR} + ${CODE_OFF}'` \
 		--data-loc `ruby -e 'print ${BASE_ADDR} + 0x4000 - ${DATA_SIZE}'` \
