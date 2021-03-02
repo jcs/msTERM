@@ -46,7 +46,7 @@ DATA_SIZE=	4800
 all: msterm.bin
 
 clean:
-	rm -f *.{map,bin,ihx,lst,rel,sym,lk,noi}
+	rm -f *.{map,bin,ihx,lst,rel,sym,lk,noi} ${SRCDIR}/logo.h
 
 # assembly
 
@@ -78,13 +78,16 @@ settings.rel: settings.s
 csi.rel: csi.c
 	$(SDCC) -c ${.TARGET} $>
 
+$(SRCDIR)/logo.h: logo.ans
+	(echo "const char logo[] = {"; xxd -i < $> ; echo "};") > ${.TARGET}
+
 # c code
 
 mslib.rel: mslib.c
 	$(SDCC) -c ${.TARGET} $>
 
-msterm.rel: msterm.c
-	$(SDCC) -c ${.TARGET} $>
+msterm.rel: msterm.c logo.h
+	$(SDCC) -c ${.TARGET} $(SRCDIR)/msterm.c
 
 # generated code
 

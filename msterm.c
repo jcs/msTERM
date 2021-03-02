@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 #include "mailstation.h"
+#include "logo.h"
 
 unsigned char lastkey;
 unsigned char esc;
@@ -65,7 +66,7 @@ int main(void)
 	unsigned char *memp = &mem0;
 	unsigned char old_obuf_pos;
 	unsigned char ms[10];
-	unsigned int b;
+	unsigned int b, j;
 
 restart:
 	lastkey = 0;
@@ -86,14 +87,18 @@ restart:
 
 	maybe_update_statusbar(1);
 
-	printf("\n"
-	    "                            ________________  __  ___\n"
-	    "             ____ ___  ____/_  __/ ____/ __ \\/  |/  /\n"
-	    "            / __ `__ \\/ ___// / / __/ / /_/ / /|_/ /\n"
-	    "           / / / / / (__  )/ / / /___/ _, _/ /  / /\n"
-	    "          /_/ /_/ /_/____//_/ /_____/_/ |_/_/  /_/  ver %u\n"
-	    "\n",
-	    msTERM_version);
+	/* - 1 to ignore final null byte */
+	for (b = 0; b < sizeof(logo) - 1; b++) {
+		if (b == 0 || logo[b - 1] == '\n') {
+			/* center logo without wasting space in logo[] */
+			for (j = 0; j < 12; j++)
+				putchar(' ');
+		}
+
+		putchar(logo[b]);
+	}
+
+	printf("  v%u\n\n", msTERM_version);
 
 	if (source == SOURCE_MODEM) {
 		modem_init();
