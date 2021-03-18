@@ -31,6 +31,7 @@
 	.equ	settings_ident_2,	's'
 
 	.area	_DATA
+
 settings_begin:
 settings_ident:
 	.db	#settings_ident_0

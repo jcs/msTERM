@@ -28,9 +28,6 @@ unsigned int csibuflen;
 
 unsigned char in_csi;
 
-volatile unsigned char saved_cursorx;
-volatile unsigned char saved_cursory;
-
 void
 parseCSI(void)
 {

@@ -136,10 +136,6 @@ lojump:
 
 _msTERM_version::
 	.db	#VERSION
-
-	; variables
-        .area   _BSS
-
 _debug0::
 	.db	#0
 _debug1::

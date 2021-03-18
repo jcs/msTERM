@@ -30,8 +30,6 @@
 	; the scancode pressed and the state of the shift and caps lock keys.
 	.include "scancodes.inc"
 
-	.area _BSS
-
 keyboardbuffer:
 	.ds	2			; scancode buffer for _getchar
 capslock:

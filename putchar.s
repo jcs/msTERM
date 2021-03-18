@@ -44,11 +44,13 @@ font_data::
 cursorx_lookup_data::
 	.include "cursorx_lookup.inc"
 
-	.area   _BSS
-
 _cursorx::				; cursor x position, 0-indexed
 	.db	#0
 _cursory::				; cursor y position, 0-indexed
+	.db	#0
+_saved_cursorx::			; cursor x position, 0-indexed
+	.db	#0
+_saved_cursory::			; cursor y position, 0-indexed
 	.db	#0
 _putchar_sgr::				; current SGR for putchar()
 	.db	#0

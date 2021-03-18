@@ -110,8 +110,8 @@ extern void itoa(int value, char *string, int radix);
 
 
 /* csi.c */
-extern volatile unsigned char saved_cursorx;
-extern volatile unsigned char saved_cursory;
+extern unsigned char saved_cursorx;
+extern unsigned char saved_cursory;
 extern void parseCSI(void);
 extern unsigned char in_csi;
 extern unsigned char csibuf[TEXT_COLS];
@@ -119,10 +119,10 @@ extern unsigned int csibuflen;
 
 
 /* putchar.s */
-extern volatile unsigned char cursorx;
-extern volatile unsigned char cursory;
-extern volatile unsigned char putchar_sgr;
-extern volatile unsigned char putchar_quick;
+extern unsigned char cursorx;
+extern unsigned char cursory;
+extern unsigned char putchar_sgr;
+extern unsigned char putchar_quick;
 extern unsigned char *font_addr;
 extern void lcd_cas(unsigned char col);
 extern void lcd_sleep(void);
