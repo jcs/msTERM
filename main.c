@@ -27,6 +27,8 @@ unsigned char lastkey;
 unsigned char esc;
 unsigned char old_modem_msr;
 unsigned char old_minutes;
+unsigned char old_statusbar_left_len;
+unsigned char old_statusbar_right_len;
 
 #define MODEM_MSR_DCD	(1 << 7)
 
@@ -80,25 +82,25 @@ restart:
 	old_obuf_pos = 0;
 	old_modem_msr = 0;
 	old_minutes = 0;
+	old_statusbar_left_len = 0;
+	old_statusbar_right_len = 0;
 	debug0 = 0;
 
 	settings_read();
 	clear_screen_bufs();
 	clear_screen();
-
-	maybe_update_statusbar(1);
+	update_statusbar(STATUSBAR_INIT, NULL);
 
 	/* - 1 to ignore final null byte */
 	for (b = 0; b < sizeof(logo) - 1; b++) {
 		if (b == 0 || logo[b - 1] == '\n') {
 			/* center logo without wasting space in logo[] */
-			for (j = 0; j < 12; j++)
+			for (j = 0; j < 14; j++)
 				putchar(' ');
 		}
 
 		putchar(logo[b]);
 	}
-
 	printf("  v%u\n\n", msTERM_version);
 
 	switch (source) {
@@ -126,6 +128,8 @@ restart:
 		obuf_queue("AT\r\n");
 		break;
 	}
+
+	maybe_update_statusbar(1);
 
 	for (;;) {
 		process_keyboard();
@@ -174,62 +178,88 @@ restart:
 }
 
 void
-update_statusbar(char *status, ...)
+update_statusbar(short which, char *status, ...)
 {
 	va_list args;
-	char tstatus[255], c;
+	char tstatus[64], c;
 	char *result = NULL;
-	unsigned char x, l;
+	unsigned char i, x, l, mx;
+
+	if (which == STATUSBAR_INIT) {
+		for (i = 0; i < LCD_COLS; i++)
+			putchar_attr(LCD_ROWS - 1, i, ' ', ATTR_REVERSE);
+		return;
+	}
 
 	va_start(args, status);
-	vsprintf(tstatus, status, args);
+	l = vsprintf(tstatus, status, args);
 	va_end(args);
 
-	l = strlen(tstatus);
+	if (which == STATUSBAR_LEFT)
+		mx = (l > old_statusbar_left_len ? l : old_statusbar_left_len);
+	else
+		mx = (l > old_statusbar_right_len ? l : old_statusbar_right_len);
 
-	for (x = 0; x < TEXT_COLS; x++) {
-		if (x >= l)
-			c = ' ';
-		else
-			c = tstatus[x];
+	if (mx > LCD_COLS)
+		mx = LCD_COLS;
+
+	for (i = 0; i < mx; i++) {
+		if (which == STATUSBAR_LEFT) {
+			if (i >= l)
+				c = ' ';
+			else
+				c = tstatus[i];
+			x = i;
+		} else {
+			if (i >= l)
+				c = ' ';
+			else
+				c = tstatus[l - 1 - i];
+			x = LCD_COLS - 1 - i;
+		}
 
 		putchar_attr(LCD_ROWS - 1, x, c, ATTR_REVERSE);
 	}
+
+	if (which == STATUSBAR_LEFT)
+		old_statusbar_left_len = l;
+	else if (which == STATUSBAR_RIGHT)
+		old_statusbar_right_len = l;
 }
 
 void
 maybe_update_statusbar(unsigned char force)
 {
-	unsigned char s;
+	unsigned char s = 0;
 	unsigned char update = 0;
 
-	if (modem_curmsr & MODEM_MSR_DCD)
-		s = 1; /* DCD set, call in progress */
-	else
-		s = 0;
-
-	if (s != (statusbar_state & (1 << 0))) {
-		statusbar_state ^= (1 << 0);
-		update = 1;
+	if (source == SOURCE_MODEM) {
+		if (modem_curmsr & MODEM_MSR_DCD)
+			s |= (1 << 0); /* DCD set, call in progress */
 	}
 
-	if ((rtcminutes != old_minutes) || force) {
-		old_minutes = rtcminutes;
-		sprintf(statusbar_time, "| %5u | %02d:%02d ",
-		    setting_modem_speed,
-		    (rtc10hours * 10) + rtchours,
-		    (rtc10minutes * 10) + rtcminutes);
-		update = 1;
-	}
-
-	if (update || force) {
-		update_statusbar("%s%s%s         %s",
+	if (force || s != statusbar_state) {
+		update_statusbar(STATUSBAR_LEFT, "%s%s",
 		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP : STATUSBAR_CALL,
-		    STATUSBAR_SETTINGS,
-		    STATUSBAR_BLANK,
-		    statusbar_time);
+		    STATUSBAR_SETTINGS);
+
+		statusbar_state = s;
+	}
+
+	if (force || (rtcminutes != old_minutes)) {
+		old_minutes = rtcminutes;
+		if (source == SOURCE_MODEM)
+			update_statusbar(STATUSBAR_RIGHT, "%5u | %02d:%02d ",
+			    setting_modem_speed,
+			    (rtc10hours * 10) + rtchours,
+			    (rtc10minutes * 10) + rtcminutes);
+		else
+			update_statusbar(STATUSBAR_RIGHT, "%02d:%02d    ",
+			    (rtc10hours * 10) + rtchours,
+			    (rtc10minutes * 10) + rtcminutes);
 	}
 }
+
 
 void
 process_keyboard(void)
