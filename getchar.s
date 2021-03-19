@@ -118,37 +118,3 @@ _getchar::
 	cp	a, #META_KEY_BEGIN
 	jr	nc, _getchar		; a >=
 	ret
-
-
-; int getkeyorlpt(void)
-; alternate calls to peekkey() and lptrecv() to get a byte from whichever
-; comes first
-; h=1 is for keyboard input, h=2 is for lpt input, h=0 for nothing
-_getkeyorlpt::
-	call	_peekkey2
-	ld	a, l
-	cp	#0
-	jr	z, trylpt
-	ld	h, #1
-	ret
-trylpt:
-	call	_lptrecv
-	ld	h, #0
-	cp	#1
-	jr	z, _getkeyorlpt
-	ld	h, #2
-	ret
-
-; peekkey() with some looping
-_peekkey2::
-	ld	b, #0xff
-peekkey2loop:
-	push	bc
-	call	_peekkey
-	pop	bc
-	ld	a, l
-	cp	#0
-	jr	nz, peekkey2out		; loop until a key is available
-	djnz	peekkey2loop
-peekkey2out:
-	ret

@@ -143,7 +143,6 @@ extern void putchar_attr(unsigned char row, unsigned char col, unsigned char c,
 extern unsigned char getscancode(unsigned char *charbuffer);
 extern int getkey(void);
 extern int peekkey(void);
-extern int getkeyorlpt(void);
 
 
 /* lpt.s */
