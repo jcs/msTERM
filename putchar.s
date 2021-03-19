@@ -22,18 +22,15 @@
 
 	.include "mailstation.inc"
 
+	; screen contents (characters) array in upper memory
+	.equ	_screenbuf,		#0xc000
+	.equ	_screenbufend,		#0xc3ff
+
+	; per-character attributes array in upper memory
+	.equ	_screenattrs,		#0xc400
+	.equ	_screenattrsend,	#0xc7ff
+
 	.area	_DATA
-
-	; screen contents (characters) - should be 0xa000 - 0xa3ff
-_screenbuf::
-	.ds	(LCD_COLS * LCD_ROWS)
-_screenbufend::
-
-	; per-character attributes - should be 0xa400 - 0xa7ff
-	; see ATTR_* constants
-_screenattrs::
-	.ds	(LCD_COLS * LCD_ROWS)
-_screenattrsend::
 
 font_data::
 	.include "font/spleen-5x8.inc"

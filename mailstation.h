@@ -65,9 +65,6 @@ __sfr __at(0x28) port28;
 #define ATTR_BOLD		(1 << 2)
 #define ATTR_UNDERLINE		(1 << 3)
 
-extern char screenbuf[LCD_COLS * LCD_ROWS];
-extern char screenattrs[LCD_COLS * LCD_ROWS];
-
 /* for printf */
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
