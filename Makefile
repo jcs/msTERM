@@ -36,12 +36,6 @@ BASE_ADDR=	0x8000
 	@exit 1
 .endif
 
-# added to $BASE_ADDR, must be far enough to hold _HEADER code in crt0
-CODE_OFF=	0x100
-
-# subtracted from the end of the flash/ram page to hold data
-DATA_SIZE=	4800
-
 
 all: msterm.bin
 
@@ -97,12 +91,15 @@ main.rel: main.c logo.h
 font/spleen-5x8.inc: font/spleen-5x8.hex
 	ruby $(SRCDIR)/tools/hexfont2inc.rb $> > $(SRCDIR)/${.TARGET}
 
+# link
+
 msterm.ihx: crt0.rel isr.rel putchar.rel getchar.rel lpt.rel modem.rel \
 main.rel mslib.rel csi.rel settings.rel wifi.rel
-	$(SDCC) --no-std-crt0 \
-		--code-loc `ruby -e 'print ${BASE_ADDR} + ${CODE_OFF}'` \
-		--data-loc `ruby -e 'print ${BASE_ADDR} + 0x4000 - ${DATA_SIZE}'` \
-		-o ${.TARGET} $>
+	@SDCC="$(SDCC) --no-std-crt0" TARGET="$(.TARGET)" \
+		BASE_ADDR="$(BASE_ADDR)" CODE_OFF="$(CODE_OFF)" \
+		ruby $(SRCDIR)/tools/relink_packed.rb $>
+
+# convert to binary
 
 msterm.bin: msterm.ihx
 	objcopy -Iihex -Obinary $> $@
@@ -112,8 +109,10 @@ msterm.bin: msterm.ihx
 		exit 1; \
 	fi
 
+# helpers
+
 disasm: msterm.bin
 	z80dasm -al -g ${BASE_ADDR} $> > msterm.dasm
 
 upload: all
-	sudo ../../mailstation-tools/obj/sendload -p 0x4000 msterm.bin
+	../../WiFiStation/host/sendload /dev/cuaU0 msterm.bin
