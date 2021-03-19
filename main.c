@@ -69,7 +69,8 @@ int main(void)
 	unsigned int b, j;
 
 restart:
-	lastkey = 0;
+	/* ignore first peekkey() if it returns power button */
+	lastkey = KEY_POWER;
 	esc = 0;
 	source = SOURCE_WIFI;
 	putchar_sgr = 0;
@@ -250,9 +251,13 @@ process_keyboard(void)
 
 	switch (b) {
 	case KEY_POWER:
-		__asm
-			jp 0x0000
-		__endasm;
+		for (b = 0; b < 3; b++) {
+			new_mail(1);
+			delay(100);
+			new_mail(0);
+			delay(100);
+		}
+		powerdown_mode();
 		break;
 	case KEY_F1:
 		if (modem_curmsr & MODEM_MSR_DCD)
