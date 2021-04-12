@@ -125,7 +125,7 @@ restart:
 		break;
 	case SOURCE_WIFI:
 		wifi_init();
-		obuf_queue("AT\r\n");
+		obuf_queue("AT\r");
 		break;
 	}
 
@@ -337,7 +337,7 @@ process_keyboard(void)
 		if (b >= META_KEY_BEGIN)
 			return;
 
-		if (source == SOURCE_MODEM && b == '\n')
+		if (b == '\n')
 			b = '\r';
 
 		obuf[obuf_pos++] = b;
