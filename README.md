@@ -9,7 +9,9 @@ msTERM currently targets version 2.54 of the MailStation OS.
 
 ### Features
 
-- Support for controlling the internal modem through typed `AT` comments
+- Support for [WiFiStation](https://jcs.org/wifistation) (`SOURCE_WIFI`)
+- Support for controlling the internal modem through `AT` comments
+  (`SOURCE_MODEM`)
 - Support for interfacing with the parallel port like a serial port with
 [`tribble_getty`](https://github.com/jcs/mailstation-tools/blob/master/util/tribble_getty.c)
 on the host side
@@ -25,23 +27,16 @@ status bar
 Install
 [SDCC](http://sdcc.sourceforge.net/).
 
-Create an `obj` directory with `mkdir obj` and then run `make`.
+Create an `obj` directory with `mkdir obj` and then run `make LOC=ram` to
+compile to run out of RAM (from Loader).
 
 Then transfer `obj/msterm.bin` to the MailStation with
 [Loader](https://github.com/jcs/mailstation-tools)
 which will put the application into `0x8000`.
 
-### Flashing to `dataflash`
-
-Edit `Makefile` to change the `--code-loc` argument to `sdcc` to expect to run
-from the `0x4000` area, as well as the `.org` line in `crt0.s`.
-
-Load the compiled `obj/msterm.bin` to the `dataflash` with
-[dataflashloader.asm](https://github.com/jcs/mailstation-tools/blob/master/dataflashloader.asm).
-
 ### License
 
-Copyright (c) 2019-2020 [joshua stein](https://jcs.org/)
+Copyright (c) 2019-2021 [joshua stein](https://jcs.org/)
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
