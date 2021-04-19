@@ -125,7 +125,7 @@ restart:
 		break;
 	case SOURCE_WIFI:
 		wifi_init();
-		obuf_queue("AT\r");
+		obuf_queue("\rAT\r");
 		break;
 	}
 
@@ -166,7 +166,8 @@ restart:
 				putchar(obuf[old_obuf_pos++]);
 				break;
 			case SOURCE_WIFI:
-				wifi_write(obuf[old_obuf_pos++]);
+				if (wifi_write(obuf[old_obuf_pos]) != -1)
+					old_obuf_pos++;
 				break;
 			}
 		}
@@ -281,13 +282,10 @@ process_keyboard(void)
 
 	switch (b) {
 	case KEY_POWER:
-		for (b = 0; b < 3; b++) {
-			new_mail(1);
-			delay(100);
-			new_mail(0);
-			delay(100);
-		}
+#if 0
+		/* XXX: this triggers erroneously */
 		powerdown_mode();
+#endif
 		break;
 	case KEY_F1:
 		if (modem_curmsr & MODEM_MSR_DCD)

@@ -44,7 +44,6 @@
 	.equ	STATUS_PORT,		#0x21
 	.equ	STATUS_BUSY,		#(1 << 7)
 	.equ	STATUS_ACK,		#(1 << 6)
-	.equ	STATUS_PAPEROUT,	#(1 << 5)
 
 ; void wifi_init(void);
 _wifi_init::
@@ -136,6 +135,8 @@ _wifi_read::
 	in	a, (#STATUS_PORT)
 	and	#STATUS_BUSY		; is busy high?
 	jr	z, recv_done		; no, bail
+	and	#STATUS_ACK		; but is ack high too? probably bogus
+	jr	nz, recv_done
 	ld	a, #DATA_DIR_IN
 	out	(#DATA_DIR), a		; we're reading in
 	ld	a, #CONTROL_LINEFEED	; raise linefeed
