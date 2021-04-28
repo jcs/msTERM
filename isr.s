@@ -35,7 +35,7 @@
 
 	.area   _CODE
 
-patch_isr::
+_patch_isr::
 	di
 
 	; spray isrjump from isrjumptable to (isrjumptable + 0xff + 1)

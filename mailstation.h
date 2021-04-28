@@ -143,6 +143,10 @@ extern int getkey(void);
 extern int peekkey(void);
 
 
+/* isr.s */
+extern void patch_isr(void);
+
+
 /* lpt.s */
 extern unsigned char lptsend(unsigned char b);
 extern int lptrecv(void);

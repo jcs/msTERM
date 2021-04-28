@@ -86,6 +86,9 @@ restart:
 	old_statusbar_right_len = 0;
 	debug0 = 0;
 
+	if (source == SOURCE_MODEM)
+		patch_isr();
+
 	settings_read();
 	clear_screen_bufs();
 	clear_screen();
