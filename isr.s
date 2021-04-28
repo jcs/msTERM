@@ -71,7 +71,8 @@ patch_isr::
 	;set	5, a			; 5 for RTC
 	set	2, a			; 2 for keyboard
 	set	1, a			; 1 for keyboard
-	ld	(p3shadow), a		; store this mask in p3shadow
+	ld	hl, (p3shadow)
+	ld	(hl), a			; store this mask in p3shadow
 	out	(0x3), a
 	ei				; here we go!
 	ret
@@ -97,18 +98,20 @@ isr:
 	out	(0x3), a
 	jp	isrout
 isr_7:
-	ld	a, (p3shadow)
+	ld	hl, (p3shadow)
+	ld	a, (hl)
 	res	7, a
 	out	(0x3), a		; reset interrupt
-	ld	a, (p3shadow)
+	ld	a, (hl)
 	out	(0x3), a		; set mask back to p3shadow
 	call	0x3b19			; default power button handler
 	jp	isrout
 isr_6:
-	ld	a, (p3shadow)
+	ld	hl, (p3shadow)
+	ld	a, (hl)
 	res	6, a
 	out	(0x3), a		; reset interrupt
-	ld	a, (p3shadow)
+	ld	a, (hl)
 	out	(0x3), a		; set mask back to p3shadow
 	call	_modem_isr
 	jp	isrout

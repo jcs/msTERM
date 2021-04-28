@@ -120,7 +120,7 @@ boot:
 	jp	SLOT_ADDR + (hijump - start)
 
 hijump:
-	; SP is now in SLOT_ADDR, put our new RAM page into RUN_DEVICE/PAGE
+	; PC is now in SLOT_ADDR, put our new RAM page into RUN_DEVICE/PAGE
 	out	(#RUN_DEVICE), a
 	out	(#RUN_PAGE), a
 
@@ -128,11 +128,54 @@ hijump:
 	jp	RUN_ADDR + (lojump - start)
 
 lojump:
-	call	patch_isr		; install new ISR
+	call	find_shadows
 	call	_main			; main c code
 	jp	_exit
 
+; set location of port shadow variables depending on firmware version
+find_shadows:
+	ld	a, (#0x0037)		; firmware major version
+	cp	#0x2
+	jr	z, ver_2
+	cp	#0x1
+	jr	z, ver_1
+unrecognized_firmware:			; we can't blink because that requires
+	jp	0x0			; port and fw function addresses
+ver_1:
+	ld	a, (#0x0036)		; firmware minor version
+	cp	#0x73
+	jr	z, ver_1_73
+	jr	unrecognized_firmware
+ver_1_73:				; eMessage 1.73CID
+	ld	hl, #p2shadow
+	ld	(hl), #0xdb9f
+	ret
+ver_2:
+	ld	a, (#0x0036)		; firmware minor version
+	cp	#0x54
+	jr	z, ver_2_54
+	jr	unrecognized_firmware
+ver_2_54:				; MailStation 2.54
+	ld	hl, #p2shadow
+	ld	(hl), #0xdba2
+	ld	hl, #p3shadow
+	ld	(hl), #0xdba3
+	ld	hl, #p28shadow
+	ld	(hl), #0xdba0
+	call	patch_isr		; 2.54 works with patched modem ISR
+	ret
+
 	.area	_DATA
+
+; shadow locations
+p2shadow:
+	.dw	#0xdba2
+p3shadow:
+	.dw	#0xdba3
+p28shadow:
+	.dw	#0xdba0
+delay_func:
+	jp	0x0a5c
 
 _msTERM_version::
 	.db	#VERSION
@@ -170,16 +213,17 @@ _new_mail::
 	push	af
 	ld	a, 4(ix)
 	cp	#0
+	ld	hl, (p2shadow)
 	jr	z, light_off
 light_on:
-	ld	a, (p2shadow)
+	ld	a, (hl)
 	set	4, a
 	jr	write_p2
 light_off:
-	ld	a, (p2shadow)
+	ld	a, (hl)
 	res	4, a
 write_p2:
-	ld	(p2shadow), a
+	ld	(hl), a
 	out	(#0x02), a		; write p2shadow to port2
 	pop	af
 	pop	hl
@@ -199,10 +243,39 @@ _delay::
 	ld	l, 4(ix)
 	ld	h, 5(ix)
 	push	hl
-	call	#0x0a5c
+	call	delay_func
 	pop	hl
 	pop	hl
 	pop	bc
+	pop	af
+	pop	ix
+	ret
+
+; blink(unsigned int millis)
+; turn new mail LED on, wait millis, turn it off, wait millis
+_blink::
+	push	ix
+	ld	ix, #0
+	add	ix, sp
+	push	hl
+	ld	l, #1
+	push	hl
+	call	_new_mail		; turn it on
+	pop	hl
+	ld	l, 4(ix)
+	ld	h, 5(ix)
+	push	hl
+	call	_delay			; wait
+	pop	hl
+	ld	l, #0
+	push	hl
+	call	_new_mail		; turn it off
+	pop	hl
+	ld	l, 4(ix)
+	ld	h, 5(ix)
+	push	hl
+	call	_delay			; wait
+	pop	hl
 	pop	af
 	pop	ix
 	ret
@@ -211,10 +284,13 @@ _delay::
 ; turn the LCD off
 _lcd_sleep::
 	di
-	ld	a, (p2shadow)
+	push	hl
+	ld	hl, (p2shadow)
+	ld	a, (hl)
 	and	#0b01111111		; LCD_ON - turn port2 bit 7 off
-	ld	(p2shadow), a
+	ld	(hl), a
 	out	(#0x02), a		; write p2shadow to port2
+	pop	hl
 	ei
 	ret
 
@@ -223,10 +299,13 @@ _lcd_sleep::
 ; turn the LCD on
 _lcd_wake::
 	di
-	ld	a, (p2shadow)
+	push	hl
+	ld	hl, (p2shadow)
+	ld	a, (hl)
 	or	#0b10000000		; LCD_ON - turn port2 bit 7 on
-	ld	(p2shadow), a
+	ld	(hl), a
 	out	(#0x02), a		; write p2shadow to port2
+	pop	hl
 	ei
 	ret
 

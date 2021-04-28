@@ -62,17 +62,20 @@ _lcd_cas::
 	ld	ix, #0
 	add	ix, sp
 	push	de
-	ld	a, (p2shadow)
+	push	hl
+	ld	hl, (p2shadow)
+	ld	a, (hl)
 	and	#0b11110111		; CAS(0) - turn port2 bit 3 off
-	ld	(p2shadow), a
+	ld	(hl), a
 	out	(#0x02), a		; write p2shadow to port2
 	ld	de, #LCD_START
 	ld	a, 4(ix)
 	ld	(de), a			; write col argument
-	ld	a, (p2shadow)
+	ld	a, (hl)
 	or	#0b00001000		; CAS(1) - turn port2 bit 3 on
-	ld	(p2shadow), a
+	ld	(hl), a
 	out	(#0x02), a
+	pop	hl
 	pop	de
 	ld	sp, ix
 	pop	ix

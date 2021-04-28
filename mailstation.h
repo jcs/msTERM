@@ -97,6 +97,7 @@ extern void powerdown_mode(void);
 extern void new_mail(unsigned char on);
 extern void reboot(void);
 extern void delay(unsigned int millis);
+extern void blink(unsigned int millis);
 extern void lcd_paint(void);
 extern unsigned char read_port(unsigned char port);
 

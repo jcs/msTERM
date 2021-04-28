@@ -11,11 +11,10 @@
 	.globl	SLOT_DEVICE
 	.globl	SLOT_PAGE
 
-	; for firmware v2.54
-	; variables
-	.equ	p2shadow,		#0xdba2
-	.equ	p3shadow,		#0xdba3
-	.equ	p28shadow,		#0xdba0
+	; per-firmware version port shadow variables
+	.globl	p2shadow
+	.globl	p3shadow
+	.globl	p28shadow
 
 	; functions
 	.equ	get_keycode_from_buffer,#0x0a9a

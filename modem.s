@@ -94,17 +94,19 @@ _modem_init::
 	ld	a, #0
 	ld	(_modem_buf_pos), a
 	call	0x3dbe			; disable caller id?
-	ld	a, (p3shadow)
+	ld	hl, (p3shadow)
+	ld	a, (hl)
 	res	7, a			; disable caller id interrupt
-	ld	(p3shadow),a
+	ld	(hl),a
 	out	(#0x03), a
 	in	a, (#0x29)		; XXX what is port 29?
 	or	#0x0c
 	out	(#0x29), a
-	ld	a, (p28shadow)
+	ld	hl, (p28shadow)
+	ld	a, (hl)
 	set	2, a
 	res	3, a
-	ld	(p28shadow), a
+	ld	(hl), a
 	out	(#0x28), a		; XXX what is port 28?
 	xor	a
 	ld	(#0xe63b), a		; no idea what these shadow vars are
@@ -116,9 +118,10 @@ _modem_init::
 	ld	(#0xe638), a
 	in	a, (#SLOT_DEVICE)	; store old slot device
 	push	af
-	ld	a, (p2shadow)		; read p2shadow
+	ld	hl, (p2shadow)
+	ld	a, (hl)			; read p2shadow
 	res	5, a
-	ld	(p2shadow), a		; write p2shadow
+	ld	(hl), a			; write p2shadow
 	out	(#0x02), a		; also write it to port2
 	ld	hl, #300
 	push	hl
