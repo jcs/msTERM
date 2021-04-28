@@ -134,10 +134,12 @@ lojump:
 ; set location of port shadow variables depending on firmware version
 find_shadows:
 	ld	a, (#0x0037)		; firmware major version
-	cp	#0x2
-	jr	z, ver_2
 	cp	#0x1
 	jr	z, ver_1
+	cp	#0x2
+	jr	z, ver_2
+	cp	#0x3
+	jr	z, ver_3
 unrecognized_firmware:			; we can't blink because that requires
 	jp	0x0			; port and fw function addresses
 ver_1:
@@ -148,6 +150,8 @@ ver_1:
 ver_1_73:				; eMessage 1.73CID
 	ld	hl, #p2shadow
 	ld	(hl), #0xdb9f
+	ld	hl, #p3shadow
+	ld	(hl), #0xdba0		; TODO: verify
 	ret
 ver_2:
 	ld	a, (#0x0036)		; firmware minor version
@@ -161,7 +165,17 @@ ver_2_54:				; MailStation 2.54
 	ld	(hl), #0xdba3
 	ld	hl, #p28shadow
 	ld	(hl), #0xdba0
-	call	patch_isr		; 2.54 works with patched modem ISR
+	ret
+ver_3:
+	ld	a, (#0x0036)		; firmware minor version
+	cp	#0x0d3
+	jr	z, ver_3_03
+	jr	unrecognized_firmware
+ver_3_03:				; MailStation 3.03
+	ld	hl, #p2shadow
+	ld	(hl), #0xdba5
+	ld	hl, #p3shadow
+	ld	(hl), #0xdba6
 	ret
 
 	.area	_DATA
