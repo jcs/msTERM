@@ -155,9 +155,17 @@ ver_1_73:				; eMessage 1.73CID
 	ret
 ver_2:
 	ld	a, (#0x0036)		; firmware minor version
-	cp	#0x54
-	jr	z, ver_2_54
-	jr	unrecognized_firmware
+	cp	#0x53
+	jr	z, ver_2_53
+	jr	ver_2_54		; else, assume 2.54
+ver_2_53:				; MailStation 2.53
+	ld	hl, #p2shadow
+	ld	(hl), #0xdba1
+	ld	hl, #p3shadow
+	ld	(hl), #0xdba2
+	ld	hl, #p28shadow
+	ld	(hl), #0xdba0
+	ret
 ver_2_54:				; MailStation 2.54
 	ld	hl, #p2shadow
 	ld	(hl), #0xdba2
@@ -166,12 +174,7 @@ ver_2_54:				; MailStation 2.54
 	ld	hl, #p28shadow
 	ld	(hl), #0xdba0
 	ret
-ver_3:
-	ld	a, (#0x0036)		; firmware minor version
-	cp	#0x0d3
-	jr	z, ver_3_03
-	jr	unrecognized_firmware
-ver_3_03:				; MailStation 3.03
+ver_3:					; MailStation 3.03
 	ld	hl, #p2shadow
 	ld	(hl), #0xdba5
 	ld	hl, #p3shadow
