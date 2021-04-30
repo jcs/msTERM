@@ -243,9 +243,9 @@ maybe_update_statusbar(unsigned char force)
 	}
 
 	if (force || s != statusbar_state) {
-		update_statusbar(STATUSBAR_LEFT, "%s%s",
-		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP : STATUSBAR_CALL,
-		    STATUSBAR_SETTINGS);
+		update_statusbar(STATUSBAR_LEFT, "%s",
+		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP :
+		    STATUSBAR_BLANK);
 
 		statusbar_state = s;
 	}
@@ -263,7 +263,6 @@ maybe_update_statusbar(unsigned char force)
 			    (rtc10minutes * 10) + rtcminutes);
 	}
 }
-
 
 void
 process_keyboard(void)
