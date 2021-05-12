@@ -64,7 +64,8 @@ obuf_queue(unsigned char *c)
 		obuf[obuf_pos++] = c[x];
 }
 
-int main(void)
+int
+main(void)
 {
 	unsigned char old_obuf_pos;
 	unsigned char ms[10];
@@ -140,18 +141,24 @@ restart:
 		switch (source) {
 		case SOURCE_MODEM:
 			modem_msr();
-			if (modem_lsr() & (1 << 0))
+			if (modem_lsr() & (1 << 0)) {
 				process_input(modem_read());
+				continue;
+			}
 			break;
 		case SOURCE_LPT:
 			b = lptrecv();
-			if (b <= 0xff)
+			if (b <= 0xff) {
 				process_input(b & 0xff);
+				continue;
+			}
 			break;
 		case SOURCE_WIFI:
 			b = wifi_read();
-			if (b != -1)
+			if (b != -1) {
 				process_input(b & 0xff);
+				continue;
+			}
 			break;
 		}
 
