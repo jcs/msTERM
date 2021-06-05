@@ -81,7 +81,7 @@ $(SRCDIR)/logo.h: logo.ans
 mslib.rel: mslib.c
 	$(SDCC) -c ${.TARGET} $>
 
-main.rel: main.c logo.h
+main.rel: main.c $(SRCDIR)/logo.h
 	$(SDCC) -c ${.TARGET} $(SRCDIR)/main.c
 
 # generated code
