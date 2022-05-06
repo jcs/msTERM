@@ -24,9 +24,9 @@ SRCDIR?=	${.CURDIR}
 OBJ?=		obj/
 
 LOC?=
-.if ${LOC:L} == "flash"
+.if ${LOC} == "flash"
 BASE_ADDR=	0x4000
-.elif ${LOC:L} == "ram"
+.elif ${LOC} == "ram"
 BASE_ADDR=	0x8000
 .else
 .BEGIN:
