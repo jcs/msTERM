@@ -68,15 +68,13 @@ settings.rel: settings.s
 wifi.rel: wifi.s
 	$(ASZ80) -o ${.TARGET} ${ADDRS_INC} $>
 
-#csi.rel: csi.s
-#	$(ASZ80) -o ${.TARGET} $>
-csi.rel: csi.c
-	$(SDCC) -c ${.TARGET} $>
-
 $(SRCDIR)/logo.h: logo.ans
 	(echo "const char logo[] = {"; xxd -i < $> ; echo "};") > ${.TARGET}
 
 # c code
+
+csi.rel: csi.c
+	$(SDCC) -c ${.TARGET} $>
 
 mslib.rel: mslib.c
 	$(SDCC) -c ${.TARGET} $>
