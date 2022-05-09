@@ -28,13 +28,14 @@ Install
 [SDCC](http://sdcc.sourceforge.net/).
 
 If your `make` is not a BSD Make, install it and use `bmake` instead of `make`.
+You'll also need `objcopy` from Binutils installed in your `$PATH`.
 
 Create an `obj` directory with `mkdir obj` and then run `make LOC=ram` to
-compile to run out of RAM (from Loader).
+compile a version suitable for running from RAM (via the Loader).
 
 Then transfer `obj/msterm.bin` to the MailStation with
 [WSLoader](https://jcs.org/wifistation)
-which will put the application into `0x8000`.
+which will load the application at memory address `0x8000`.
 
 ### License
 
