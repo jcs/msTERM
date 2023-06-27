@@ -296,6 +296,14 @@ _blink::
 	pop	ix
 	ret
 
+; void panic(void)
+_panic::
+	ld	hl, #200
+	push	hl
+	call	_blink
+	pop	hl;
+	jr	_panic
+
 ; void lcd_sleep(void)
 ; turn the LCD off
 _lcd_sleep::
