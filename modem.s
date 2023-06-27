@@ -87,52 +87,16 @@ modem_isr_out:
 
 
 ; void modem_init(void)
-; most of this is from 0x33f7 in v2.54 firmware
 _modem_init::
 	push	bc
+	push	de
 	push	hl
 	ld	a, #0
 	ld	(_modem_buf_pos), a
-	call	0x3dbe			; disable caller id?
-	ld	hl, (p3shadow)
-	ld	a, (hl)
-	res	7, a			; disable caller id interrupt
-	ld	(hl),a
-	out	(#0x03), a
-	in	a, (#0x29)		; XXX what is port 29?
-	or	#0x0c
-	out	(#0x29), a
-	ld	hl, (p28shadow)
-	ld	a, (hl)
-	set	2, a
-	res	3, a
-	ld	(hl), a
-	out	(#0x28), a		; XXX what is port 28?
-	xor	a
-	ld	(#0xe63b), a		; no idea what these shadow vars are
-	ld	(#0xe63a), a
-	ld	(#0xe64d), a
-	ld	(#0xe638), a		; but init them all to 0
-; l33f8
-	ld	a, #0x01
-	ld	(#0xe638), a
+	call	_modem_powerdown
 	in	a, (#SLOT_DEVICE)	; store old slot device
-	push	af
-	ld	hl, (p2shadow)
-	ld	a, (hl)			; read p2shadow
-	res	5, a
-	ld	(hl), a			; write p2shadow
-	out	(#0x02), a		; also write it to port2
-	ld	hl, #300
-	push	hl
-	call	_delay			; delay 300ms
-	pop	hl
-	ld	a, #0
-	out	(#0x26), a		; turn port 26 off
-	ld	hl, #100
-	push	hl
-	call	_delay			; delay 100ms
-	pop	hl
+	ld	d, a
+	push	de
 	ld	a, #0x01
 	out	(#0x26), a		; turn port 26 on
 	ld	hl, #2000
@@ -242,17 +206,75 @@ set_dlab:
 	ld	a, (#SLOT_ADDR + 0x4)	; read MCR
 	or	#0b00001011
 	ld	(#SLOT_ADDR + 0x4), a	; MCR = DTR, RTS, HINT
-	ld	b, #0x01
-	ld	c, #0x06
+;	ld	b, #0x01
+;	ld	c, #0x06
 ;	call	0x0a2f			; jp 0x1afb, do something with port 3
 ;	call	0x33ca			; init modem vars, activate interrupts
 	ld	a, #0b00001001		; IER = EDSSI, ERBFI
 	ld	(#SLOT_ADDR + 0x1), a
 	ld	a, (#SLOT_ADDR + 0x6)
 	ld	(_modem_curmsr), a	; read and store MSR
-	pop	af
+	pop	de
+	ld	a, d
 	out	(#SLOT_DEVICE), a	; restore old slot device
 	pop	hl
+	pop	de
+	pop	bc
+	ret
+
+
+; void modem_powerdown(void)
+; most of this is from 0x33f6 in v2.54 firmware
+_modem_powerdown::
+	push	bc
+	push	de
+	push	hl
+	call	0x3dbe			; disable caller id?
+	ld	hl, (p3shadow)
+	ld	a, (hl)
+	res	7, a			; disable caller id interrupt
+	ld	(hl),a
+	out	(#0x03), a
+	in	a, (#0x29)		; XXX what is port 29?
+	or	#0x0c
+	out	(#0x29), a
+	ld	hl, (p28shadow)
+	ld	a, (hl)
+	set	2, a
+	res	3, a
+	ld	(hl), a
+	out	(#0x28), a		; XXX what is port 28?
+	xor	a
+	ld	(#0xe63b), a		; no idea what these shadow vars are
+	ld	(#0xe63a), a
+	ld	(#0xe64d), a
+	ld	(#0xe638), a		; but init them all to 0
+; l33f8
+	ld	a, #0x01
+	ld	(#0xe638), a
+	in	a, (#SLOT_DEVICE)	; store old slot device
+	ld	d, a
+	push	de
+	ld	hl, (p2shadow)
+	ld	a, (hl)			; read p2shadow
+	res	5, a
+	ld	(hl), a			; write p2shadow
+	out	(#0x02), a		; also write it to port2
+	ld	hl, #300
+	push	hl
+	call	_delay			; delay 300ms
+	pop	hl
+	ld	a, #0
+	out	(#0x26), a		; turn port 26 off
+	ld	hl, #100
+	push	hl
+	call	_delay			; delay 100ms
+	pop	hl
+	pop	de
+	ld	a, d
+	out	(#SLOT_DEVICE), a	; restore old slot device
+	pop	hl
+	pop	de
 	pop	bc
 	ret
 

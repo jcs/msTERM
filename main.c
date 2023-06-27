@@ -238,15 +238,12 @@ update_f1(void)
 
 	if (source == SOURCE_MODEM) {
 		if (modem_curmsr & MODEM_MSR_DCD)
-			s |= (1 << 0); /* DCD set, call in progress */
+			update_statusbar(STATUSBAR_F1, "   Hangup  ");
+		else
+			update_statusbar(STATUSBAR_F1, " No Carrier");
 	} else if (source == SOURCE_WIFI) {
-		s |= (1 << 0);
-	}
-
-	if (s & (1 << 0))
 		update_statusbar(STATUSBAR_F1, "   Hangup  ");
-	else
-		update_statusbar(STATUSBAR_F1, "           ");
+	}
 }
 
 int
@@ -288,6 +285,7 @@ process_keyboard(void)
 		if (source == SOURCE_MODEM) {
 			printf("\nHanging up modem...\n");
 			modem_hangup();
+			modem_powerdown();
 			printf("\nSwitching to WiFiStation...\n");
 			source = SOURCE_WIFI;
 		} else if (source == SOURCE_WIFI) {
