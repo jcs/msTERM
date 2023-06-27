@@ -25,16 +25,17 @@
 
 unsigned char lastkey;
 unsigned char esc;
-unsigned char old_modem_msr;
 unsigned char old_minutes;
-unsigned char old_statusbar_left_len;
-unsigned char old_statusbar_right_len;
+unsigned char obuf_sent_pos;
 
 #define MODEM_MSR_DCD	(1 << 7)
 
-void process_keyboard(void);
+int process_keyboard(void);
 void process_input(unsigned char b);
-void maybe_update_statusbar(unsigned char force);
+void update_clock(void);
+void update_f1(void);
+void obuf_flush(void);
+void wifi_hangup(void);
 
 #define DEBUG
 
@@ -46,14 +47,14 @@ enum {
 };
 unsigned char source;
 
-#define STATUSBAR_CALL		"     Call    "
-#define STATUSBAR_HANGUP	"    Hangup   "
-#define STATUSBAR_BLANK		"             "
-#define STATUSBAR_SETTINGS	"  Settings   "
-#define STATUSBAR_PAUSE		"    Pause    "
-#define STATUSBAR_CONTINUE	"  Continue   "
-unsigned char statusbar_state;
-unsigned char statusbar_time[16];
+enum {
+	STATUSBAR_F1,
+	STATUSBAR_F2,
+	STATUSBAR_F3,
+	STATUSBAR_F4,
+	STATUSBAR_F5,
+	STATUSBAR_INIT,
+};
 
 void
 obuf_queue(unsigned char *c)
@@ -67,11 +68,10 @@ obuf_queue(unsigned char *c)
 int
 main(void)
 {
-	unsigned char old_obuf_pos;
 	unsigned char ms[10];
-	unsigned int b, j;
+	unsigned char shown_logo;
+	int b, j;
 
-restart:
 	/* ignore first peekkey() if it returns power button */
 	lastkey = KEY_POWER;
 	esc = 0;
@@ -80,32 +80,41 @@ restart:
 	in_csi = 0;
 	csibuflen = 0;
 	obuf_pos = 0;
-	old_obuf_pos = 0;
-	old_modem_msr = 0;
-	old_minutes = 0;
-	old_statusbar_left_len = 0;
-	old_statusbar_right_len = 0;
+	obuf_sent_pos = 0;
 	debug0 = 0;
+	shown_logo = 0;
 
-	if (source == SOURCE_MODEM)
-		patch_isr();
+	patch_isr();
 
 	settings_read();
 	clear_screen_bufs();
 	clear_screen();
 	update_statusbar(STATUSBAR_INIT, NULL);
 
-	/* - 1 to ignore final null byte */
-	for (b = 0; b < sizeof(logo) - 1; b++) {
-		if (b == 0 || logo[b - 1] == '\n') {
-			/* center logo without wasting space in logo[] */
-			for (j = 0; j < 14; j++)
-				putchar(' ');
-		}
+begin:
+	if (source == SOURCE_WIFI)
+		/* call this early to sleep while we draw the logo */
+		wifi_init();
 
-		putchar(logo[b]);
+	if (!shown_logo) {
+		/* - 1 to ignore final null byte */
+		for (b = 0; b < sizeof(logo) - 1; b++) {
+			if (b == 0 || logo[b - 1] == '\n') {
+				/* center without wasting space in logo[] */
+				for (j = 0; j < 14; j++)
+					putchar(' ');
+			}
+
+			putchar(logo[b]);
+		}
+		printf("  v%u\n\n", msTERM_version);
+		shown_logo = 1;
 	}
-	printf("  v%u\n\n", msTERM_version);
+
+	old_minutes = 0xff;
+	update_clock();
+
+	update_f1();
 
 	switch (source) {
 	case SOURCE_MODEM:
@@ -128,15 +137,18 @@ restart:
 		obuf_queue("&K5\r");
 		break;
 	case SOURCE_WIFI:
-		wifi_init();
 		obuf_queue("\rAT\r");
+		obuf_flush();
 		break;
 	}
 
-	maybe_update_statusbar(1);
+	obuf_flush();
 
 	for (;;) {
-		process_keyboard();
+		b = process_keyboard();
+		if (b == KEY_F4)
+			/* we changed sources */
+			goto begin;
 
 		switch (source) {
 		case SOURCE_MODEM:
@@ -162,43 +174,27 @@ restart:
 			break;
 		}
 
-		if (old_obuf_pos != obuf_pos) {
-			switch (source) {
-			case SOURCE_MODEM:
-				if (modem_lsr() & (1 << 5))
-					/* Transmitter Holding Register Empty */
-					modem_write(obuf[old_obuf_pos++]);
-				break;
-			case SOURCE_LPT:
-				lptsend(obuf[old_obuf_pos++]);
-				break;
-			case SOURCE_ECHO:
-				putchar(obuf[old_obuf_pos++]);
-				break;
-			case SOURCE_WIFI:
-				if (wifi_write(obuf[old_obuf_pos]) != -1)
-					old_obuf_pos++;
-				break;
-			}
-		}
+		if (obuf_sent_pos != obuf_pos)
+			obuf_flush();
 
-		maybe_update_statusbar(0);
+		update_clock();
 	}
 
 	return 0;
 }
 
 void
-update_statusbar(short which, char *status, ...)
+update_statusbar(char which, char *status, ...)
 {
 	va_list args;
-	char tstatus[64], c;
+	char tstatus[64];
 	char *result = NULL;
-	unsigned char i, x, l, mx;
+	unsigned char i, l;
 
 	if (which == STATUSBAR_INIT) {
 		for (i = 0; i < LCD_COLS; i++)
-			putchar_attr(LCD_ROWS - 1, i, ' ', ATTR_REVERSE);
+			putchar_attr(LCD_ROWS - 1, i,
+			    ((i + 1) % 13 == 0 ? '|' : ' '), ATTR_REVERSE);
 		return;
 	}
 
@@ -206,72 +202,54 @@ update_statusbar(short which, char *status, ...)
 	l = vsprintf(tstatus, status, args);
 	va_end(args);
 
-	if (which == STATUSBAR_LEFT)
-		mx = (l > old_statusbar_left_len ? l : old_statusbar_left_len);
-	else
-		mx = (l > old_statusbar_right_len ? l : old_statusbar_right_len);
-
-	if (mx > LCD_COLS)
-		mx = LCD_COLS;
-
-	for (i = 0; i < mx; i++) {
-		if (which == STATUSBAR_LEFT) {
-			if (i >= l)
-				c = ' ';
-			else
-				c = tstatus[i];
-			x = i;
-		} else {
-			if (i >= l)
-				c = ' ';
-			else
-				c = tstatus[l - 1 - i];
-			x = LCD_COLS - 1 - i;
-		}
-
-		putchar_attr(LCD_ROWS - 1, x, c, ATTR_REVERSE);
+	if (l > sizeof(tstatus)) {
+		new_mail(1);
+		panic();
 	}
 
-	if (which == STATUSBAR_LEFT)
-		old_statusbar_left_len = l;
-	else if (which == STATUSBAR_RIGHT)
-		old_statusbar_right_len = l;
+	for (i = 0; i < l; i++) {
+		putchar_attr(LCD_ROWS - 1, (which * 13) + i, tstatus[i],
+		    ATTR_REVERSE);
+	}
 }
 
 void
-maybe_update_statusbar(unsigned char force)
+update_clock(void)
+{
+	static const char modem_s[] = "Modem";
+	static const char wifi_s[] = "WiFi ";
+
+	if (rtcminutes == old_minutes)
+		return;
+
+	update_statusbar(STATUSBAR_F4, "    %s   ",
+	    (source == SOURCE_MODEM ? modem_s: wifi_s));
+	update_statusbar(STATUSBAR_F5, "   %02d:%02d    ",
+	    (rtc10hours * 10) + rtchours,
+	    (rtc10minutes * 10) + rtcminutes);
+
+	old_minutes = rtcminutes;
+}
+
+void
+update_f1(void)
 {
 	unsigned char s = 0;
-	unsigned char update = 0;
 
 	if (source == SOURCE_MODEM) {
 		if (modem_curmsr & MODEM_MSR_DCD)
 			s |= (1 << 0); /* DCD set, call in progress */
+	} else if (source == SOURCE_WIFI) {
+		s |= (1 << 0);
 	}
 
-	if (force || s != statusbar_state) {
-		update_statusbar(STATUSBAR_LEFT, "%s",
-		    statusbar_state & (1 << 0) ? STATUSBAR_HANGUP :
-		    STATUSBAR_BLANK);
-
-		statusbar_state = s;
-	}
-
-	if (force || (rtcminutes != old_minutes)) {
-		old_minutes = rtcminutes;
-		if (source == SOURCE_MODEM)
-			update_statusbar(STATUSBAR_RIGHT, "%5u | %02d:%02d ",
-			    setting_modem_speed,
-			    (rtc10hours * 10) + rtchours,
-			    (rtc10minutes * 10) + rtcminutes);
-		else
-			update_statusbar(STATUSBAR_RIGHT, "%02d:%02d    ",
-			    (rtc10hours * 10) + rtchours,
-			    (rtc10minutes * 10) + rtcminutes);
-	}
+	if (s & (1 << 0))
+		update_statusbar(STATUSBAR_F1, "   Hangup  ");
+	else
+		update_statusbar(STATUSBAR_F1, "           ");
 }
 
-void
+int
 process_keyboard(void)
 {
 	unsigned char b;
@@ -287,22 +265,45 @@ process_keyboard(void)
 		lastkey = b;
 
 	if (b == 0)
-		return;
+		return 0;
 
 	switch (b) {
 	case KEY_POWER:
-#if 0
 		/* XXX: this triggers erroneously */
+#if 0
 		powerdown_mode();
+#else
+		printf("[power]");
 #endif
 		break;
 	case KEY_F1:
-		if (modem_curmsr & MODEM_MSR_DCD)
+		if (source == SOURCE_MODEM) {
+			if (modem_curmsr & MODEM_MSR_DCD)
+				modem_hangup();
+		} else if (source == SOURCE_WIFI) {
+			wifi_hangup();
+		}
+		break;
+	case KEY_F4:
+		if (source == SOURCE_MODEM) {
+			printf("\nHanging up modem...\n");
 			modem_hangup();
+			printf("\nSwitching to WiFiStation...\n");
+			source = SOURCE_WIFI;
+		} else if (source == SOURCE_WIFI) {
+			printf("\nDisconnecting WiFiStation...\n");
+			wifi_hangup();
+			printf("\nSwitching to modem...\n");
+			source = SOURCE_MODEM;
+		}
 		break;
 	case KEY_MAIN_MENU:
 		/* send escape */
 		obuf[obuf_pos++] = ESC;
+		break;
+	case KEY_EMAIL:
+		//powerdown_mode();
+		reboot();
 		break;
 	case KEY_PAGE_UP:
 		obuf[obuf_pos++] = ESC;
@@ -338,17 +339,19 @@ process_keyboard(void)
 		break;
 	case KEY_SIZE:
 		redraw_screen();
-		maybe_update_statusbar(1);
+		update_f1();
 		break;
 	default:
 		if (b >= META_KEY_BEGIN)
-			return;
+			return 0;
 
 		if (b == '\n')
 			b = '\r';
 
 		obuf[obuf_pos++] = b;
 	}
+
+	return b;
 }
 
 void
@@ -408,4 +411,48 @@ process_input(unsigned char b)
 	default:
 		putchar(b);
 	}
+}
+
+void
+obuf_flush(void)
+{
+	int b;
+
+	while (obuf_sent_pos != obuf_pos) {
+		switch (source) {
+		case SOURCE_MODEM:
+			if (modem_lsr() & (1 << 5))
+				/* Transmitter Holding Register Empty */
+				modem_write(obuf[obuf_sent_pos++]);
+			break;
+		case SOURCE_LPT:
+			lptsend(obuf[obuf_sent_pos++]);
+			break;
+		case SOURCE_ECHO:
+			putchar(obuf[obuf_sent_pos++]);
+			break;
+		case SOURCE_WIFI:
+			if (wifi_write(obuf[obuf_sent_pos]) == -1) {
+				if ((b = wifi_read()) != -1)
+					process_input(b & 0xff);
+			} else
+				obuf_sent_pos++;
+			break;
+		}
+	}
+}
+
+void
+wifi_hangup(void)
+{
+	obuf[obuf_pos++] = '+';
+	obuf[obuf_pos++] = '+';
+	obuf[obuf_pos++] = '+';
+	obuf_flush();
+	delay(800);
+	obuf[obuf_pos++] = 'A';
+	obuf[obuf_pos++] = 'T';
+	obuf[obuf_pos++] = 'H';
+	obuf[obuf_pos++] = '\r';
+	obuf_flush();
 }

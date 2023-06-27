@@ -178,12 +178,7 @@ extern void modem_hangup(void);
 extern volatile unsigned char mem0;
 extern volatile unsigned char obuf[];
 extern volatile unsigned char obuf_pos;
-enum {
-	STATUSBAR_INIT,
-	STATUSBAR_LEFT,
-	STATUSBAR_RIGHT,
-};
-extern void update_statusbar(short which, char *status, ...);
+extern void update_statusbar(char which, char *status, ...);
 
 
 /* settings.s */
