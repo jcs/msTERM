@@ -1,11 +1,10 @@
 ## msTERM
 
-A terminal program for the MailStation with the ability to use the internal
-modem or parallel port.
+![https://i.imgur.com/2l9rXK4.jpg](https://i.imgur.com/2l9rXK4.jpg)
+
+A terminal program for the Cidco MailStation.
 
 msTERM currently targets version 2.54 of the MailStation OS.
-
-![https://i.imgur.com/2l9rXK4.jpg](https://i.imgur.com/2l9rXK4.jpg)
 
 ### Features
 
@@ -17,7 +16,7 @@ msTERM currently targets version 2.54 of the MailStation OS.
 on the host side
 - Custom version of
 [Spleen 5x8](https://github.com/fcambus/spleen)
-with DOS 437 codepage characters giving a 64x14 terminal window with a
+with DOS 437 codepage characters giving a 64x15 terminal window with a
 status bar
 - Blinking the "New Mail" LED when modem data transfers
 - Caps Lock key can be used as a Control key and Main Menu as Escape
