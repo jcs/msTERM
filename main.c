@@ -266,7 +266,10 @@ process_keyboard(void)
 
 	switch (b) {
 	case KEY_POWER:
-		powerdown_mode();
+		/* not sure why the delay is needed to actually power down */
+		clear_screen();
+		delay(200);
+		powerdown();
 		break;
 	case KEY_F1:
 		if (source == SOURCE_MODEM) {

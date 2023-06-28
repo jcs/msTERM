@@ -212,8 +212,10 @@ _debug4::
 _exit::
 	call	_reboot
 
-_powerdown_mode::
-	call	#0x0a6b			; firmware powerdownmode function
+_powerdown::
+	di
+	call	#0x0a6b			; firmware powerdown function
+	jp	_panic			; in case we fail to powerdown somehow
 
 _reboot::
 	jp	0x0000
