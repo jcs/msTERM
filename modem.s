@@ -91,12 +91,12 @@ _modem_init::
 	push	bc
 	push	de
 	push	hl
-	ld	a, #0
-	ld	(_modem_buf_pos), a
-	call	_modem_powerdown
 	in	a, (#SLOT_DEVICE)	; store old slot device
 	ld	d, a
 	push	de
+	ld	a, #0
+	ld	(_modem_buf_pos), a
+	call	_modem_powerdown
 	ld	a, #0x01
 	out	(#0x26), a		; turn port 26 on
 	ld	hl, #2000
@@ -257,7 +257,7 @@ _modem_powerdown::
 	push	de
 	ld	hl, (p2shadow)
 	ld	a, (hl)			; read p2shadow
-	res	5, a
+	res	5, a			; turn off port 2.5 - modem power
 	ld	(hl), a			; write p2shadow
 	out	(#0x02), a		; also write it to port2
 	ld	hl, #300
@@ -283,10 +283,6 @@ _modem_powerdown::
 ; return a byte in hl from the modem FIFO, from 0x3328 in v2.54 firmware
 _modem_read::
 	; use	hl
-	ld	hl, #1
-	push	hl
-	call	_new_mail
-	pop	hl
 	in	a, (#SLOT_ADDR)		; save old slot device
 	ld	h, a			; into h
 	ld	a, #DEVICE_MODEM
@@ -296,12 +292,6 @@ _modem_read::
 	ld	a, h
 	out	(#SLOT_DEVICE), a	; set old slot device
 	ld	h, #0x00
-	push	hl
-	ld	hl, #0
-	push	hl
-	call	_new_mail
-	pop	hl
-	pop	hl
 	ret				; return hl
 
 
@@ -311,11 +301,6 @@ _modem_write::
 	push	ix
 	ld	ix, #0
 	add	ix, sp
-	push	hl
-	ld	hl, #1
-	push	hl
-	call	_new_mail
-	pop	hl
 	ld	a, 4(ix)
 	ld	l, a
 	in	a, (#SLOT_DEVICE)
@@ -326,11 +311,6 @@ _modem_write::
 	ld	(#SLOT_ADDR), a
 	ld	a, h
 	out	(#SLOT_DEVICE), a
-	ld	hl, #0
-	push	hl
-	call	_new_mail
-	pop	hl
-	pop	hl
 	pop	ix
 	ret
 
