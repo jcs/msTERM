@@ -25,7 +25,7 @@
 	.area   _CODE
 
 	.equ	CONTROL_DIR,		#0x0a
-	.equ	CONTROL_DIR_OUT,	#0xff
+	.equ	CONTROL_DIR_OUT,	#0b00001111
 	.equ	CONTROL_DIR_IN,		#0
 
 	.equ	CONTROL_PORT,		#0x9

@@ -266,12 +266,7 @@ process_keyboard(void)
 
 	switch (b) {
 	case KEY_POWER:
-		/* XXX: this triggers erroneously */
-#if 0
 		powerdown_mode();
-#else
-		printf("[power]");
-#endif
 		break;
 	case KEY_F1:
 		if (source == SOURCE_MODEM) {
@@ -300,7 +295,6 @@ process_keyboard(void)
 		obuf[obuf_pos++] = ESC;
 		break;
 	case KEY_EMAIL:
-		//powerdown_mode();
 		reboot();
 		break;
 	case KEY_PAGE_UP:
