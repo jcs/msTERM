@@ -39,8 +39,8 @@ settings_ident:
 	.db	#settings_ident_2
 _setting_modem_speed:
 	.dw	#MODEM_DEFAULT_SPEED
-_setting_modem_quiet:
-	.db	#0
+_setting_default_source:
+	.db	#SOURCE_WIFI
 settings_end:
 
 	.area	_CODE

@@ -45,6 +45,13 @@ __sfr __at(0x1b) rtcyears;
 __sfr __at(0x1c) rtc10years;
 __sfr __at(0x28) port28;
 
+/* be sure to keep these in sync with mailstation.inc */
+#define SOURCE_WIFI		0
+#define SOURCE_MODEM		1
+#define SOURCE_LPT		2
+#define SOURCE_ECHO		3
+#define SOURCE_LAST		4
+
 /* LCD parameters (2 screens) */
 #define LCD_WIDTH		(160 * 2)	// 320
 #define LCD_HEIGHT		128
@@ -184,7 +191,7 @@ extern void update_statusbar(char which, char *status, ...);
 
 /* settings.s */
 extern volatile unsigned int setting_modem_speed;
-extern volatile unsigned char setting_modem_quiet;
+extern volatile unsigned char setting_default_source;
 extern void settings_read(void);
 extern void settings_write(void);
 

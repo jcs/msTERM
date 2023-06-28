@@ -38,14 +38,6 @@ void update_f1(void);
 void obuf_flush(void);
 void wifi_hangup(void);
 
-#define DEBUG
-
-enum {
-	SOURCE_MODEM,
-	SOURCE_LPT,
-	SOURCE_ECHO,
-	SOURCE_WIFI,
-};
 unsigned char source;
 
 enum {
@@ -76,7 +68,6 @@ main(void)
 	/* ignore first peekkey() if it returns power button */
 	last_key = KEY_POWER;
 	esc = 0;
-	source = SOURCE_WIFI;
 	putchar_sgr = 0;
 	in_csi = 0;
 	csibuflen = 0;
@@ -88,6 +79,10 @@ main(void)
 	patch_isr();
 
 	settings_read();
+	source = setting_default_source;
+	if (source >= SOURCE_LAST)
+		source = SOURCE_WIFI;
+
 	clear_screen_bufs();
 	clear_screen();
 	update_statusbar(STATUSBAR_INIT, NULL);
@@ -296,6 +291,8 @@ process_keyboard(void)
 			printf("\nSwitching to modem...\n");
 			source = SOURCE_MODEM;
 		}
+		setting_default_source = source;
+		settings_write();
 		break;
 	case KEY_MAIN_MENU:
 		/* send escape */

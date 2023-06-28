@@ -71,13 +71,20 @@
 	.equ	XON,			#0x11
 	.equ	XOFF,			#0x13
 
+	; be sure to keep these in sync with mailstation.h
+	.equ	SOURCE_WIFI,		#0
+	.equ	SOURCE_MODEM,		#1
+	.equ	SOURCE_LPT,		#2
+	.equ	SOURCE_ECHO,		#3
+	.equ	SOURCE_LAST,		#4
+
 	.globl	_saved_cursorx
 	.globl	_saved_cursory
 	.globl	_delay
 
 	; settings
 	.globl	_setting_modem_speed
-	.globl	_setting_modem_quiet
+	.globl	_setting_default_source
 
 	.globl	_modem_buf
 	.globl	_modem_buf_pos
