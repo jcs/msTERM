@@ -23,7 +23,8 @@ SRCDIR?=	${.CURDIR}
 
 OBJ?=		obj/
 
-LOC?=
+LOC?=		ram
+
 .if ${LOC} == "flash"
 BASE_ADDR=	0x4000
 .elif ${LOC} == "ram"
@@ -34,6 +35,8 @@ BASE_ADDR=	0x8000
 	@exit 1
 .endif
 
+.BEGIN:
+	@echo "compiling for running from ${LOC} (${BASE_ADDR})"
 
 all: msterm.bin
 
