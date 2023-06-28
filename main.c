@@ -385,7 +385,7 @@ process_input(unsigned char b)
 	switch (b) {
 	case 7: /* visual bell, ping 'new mail' light */
 		new_mail(1);
-		delay(500);
+		delay(150);
 		new_mail(0);
 		break;
 	case 9: /* tab */
