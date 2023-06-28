@@ -23,10 +23,11 @@
 #include "mailstation.h"
 #include "logo.h"
 
-unsigned char lastkey;
+unsigned char last_key;
 unsigned char esc;
 unsigned char old_minutes;
 unsigned char obuf_sent_pos;
+unsigned char last_modem_msr;
 
 #define MODEM_MSR_DCD	(1 << 7)
 
@@ -73,7 +74,7 @@ main(void)
 	int b, j;
 
 	/* ignore first peekkey() if it returns power button */
-	lastkey = KEY_POWER;
+	last_key = KEY_POWER;
 	esc = 0;
 	source = SOURCE_WIFI;
 	putchar_sgr = 0;
@@ -152,7 +153,10 @@ begin:
 
 		switch (source) {
 		case SOURCE_MODEM:
-			modem_msr();
+			if (modem_msr() != last_modem_msr) {
+				update_f1();
+				last_modem_msr = modem_curmsr;
+			}
 			if (modem_lsr() & (1 << 0)) {
 				process_input(modem_read());
 				continue;
@@ -255,11 +259,11 @@ process_keyboard(void)
 
 	/* this breaks key-repeat, but it's needed to debounce */
 	if (b == 0)
-		lastkey = 0;
-	else if (b == lastkey)
+		last_key = 0;
+	else if (b == last_key)
 		b = 0;
 	else
-		lastkey = b;
+		last_key = b;
 
 	if (b == 0)
 		return 0;
