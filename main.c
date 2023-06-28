@@ -128,12 +128,12 @@ begin:
 		/* max_rate */
 		itoa(setting_modem_speed, ms, 10);
 		obuf_queue(ms);
-		/* Turn speaker off */
-		obuf_queue("M0");
-		/* Allow result codes to DTE */
-		obuf_queue("Q0");
+		/* Turn speaker on */
+		obuf_queue("M1");
 		/* Set low speaker volume */
 		obuf_queue("L0");
+		/* Allow result codes to DTE */
+		obuf_queue("Q0");
 		/* Enable transparent XON/XOFF flow control */
 		obuf_queue("&K5\r");
 		break;
