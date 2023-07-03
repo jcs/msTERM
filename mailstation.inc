@@ -1,6 +1,6 @@
 ; vim:syntax=z8a:ts=8:sw=8
 
-	.equ	VERSION,		#0x3
+	.equ	VERSION,		#0x4
 
 	; these are defined in addrs-*, either of which is linked into the
 	; build based on where we're running from
